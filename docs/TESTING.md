@@ -97,6 +97,32 @@ live API. Phase 5 passed 51 tests with 100% line, method, and branch coverage
 across all nine handwritten production classes; Javadoc also passed. Actual browser
 search and analysis integration remain for later phases.
 
+## Phase 6 cases
+
+`ApplicationControllerTest` checks the updated home form, route, and stylesheet.
+`SearchControllerTest` replaces the service with a mock to inspect response HTML
+using jsoup. A separate integration case uses the real service with a mocked
+Mastodon client to verify validation and repeated-search cache reuse.
+
+| Partition | Expected result |
+| --- | --- |
+| Two posts with distinct metadata, encoded markup, and empty content | Exact fields/order, escaped text, original URLs, no-text placeholder |
+| Empty successful page | 200, zero count, clear no-results message |
+| Missing term and controlled errors | Correct 400/410/502/503/504 status and explanation |
+| Invalid input containing HTML | Preserved input, no injected elements |
+| Pending operation | Action returns an incomplete stage without blocking |
+| Unexpected exception or completion wrapper without cause | Generic 500; no raw failure details |
+| Real validator with leading hash | 400 without any client call |
+| Repeated case-equivalent browser searches | Identical snapshot HTML and one client call |
+
+Phase 6 verification passed 57 tests, 100% line/method/branch coverage of handwritten
+production code, and Javadoc generation.
+
+Live browser visual inspection remains pending because the browser host was
+unavailable. The existing localhost server returned a missing-dependency compile
+error; a restart is needed to pick up Phase 5's build changes. Tests use newly
+constructed applications with the current dependencies and no live Mastodon calls.
+
 ## Coverage rules
 
 JaCoCo measures all compiled application classes except compiler-generated routes,

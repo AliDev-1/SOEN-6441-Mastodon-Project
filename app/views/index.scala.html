@@ -1,20 +1,6 @@
 @()
-
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>MAWA | Mastodon Analysis Web App</title>
-        <link rel="stylesheet" href="@routes.Assets.versioned("stylesheets/main.css")">
-    </head>
-    <body>
-        @* This first page confirms that the Play application is running. *@
-        <main>
-            <p class="eyebrow">SOEN 6441 · Delivery 1</p>
-            <h1>Mastodon Analysis Web App</h1>
-            <p>Explore Mastodon posts by hashtag.</p>
-            <p id="app-status">The application foundation is ready. Hashtag search, readability, and word statistics will be added in later phases.</p>
-        </main>
-    </body>
-</html>
+@layout("MAWA") {
+    <h1>Mastodon Analysis Web App</h1>
+    <p>Explore Mastodon posts by hashtag.</p>
+    @searchForm("")
+}

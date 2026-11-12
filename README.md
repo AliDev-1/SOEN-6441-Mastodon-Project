@@ -5,10 +5,11 @@ Mastodon hashtag posts and display them with readability scores and word statist
 
 ## Current status
 
-Phase 5 adds validated hashtag searches and a shared asynchronous page cache
-(maximum 100 retained pages, ten-minute expiry). Repeated searches reuse responses;
-future analysis links can retrieve an exact cached snapshot without another API
-request. The home page remains unchanged until the Phase 6 search UI.
+Phase 6 connects the search service to the browser. Search by hashtag to see up to
+40 posts with author, publication time, language, readable content, visibility, and
+original links. Invalid input and API failures show useful errors; empty searches
+show a no-results message. Results reuse the Phase 5 cache. Pagination controls,
+readability, and word statistics follow in later phases.
 
 ## Run locally
 
@@ -35,6 +36,20 @@ reports appear at `target/scala-2.13/jacoco/report/html/index.html`, and Javadoc
 `target/site/javadoc/index.html`. Javadoc includes private methods and test classes.
 `clean` deletes generated outputs, so regenerate reports afterward when needed.
 See [testing notes](docs/TESTING.md) for the current test cases and coverage rules.
+
+## Usage
+
+1. Load your local environment and start Play as described in the setup guide.
+2. Open <http://localhost:9000>, enter a hashtag such as `java` without `#`, and
+   click **Search posts**. Searches can be bookmarked at `/search?hashtag=java`.
+3. Read the first page of results or follow **View original post**. Publication
+   times are UTC. No-text posts display a clear placeholder.
+4. Correct invalid input or retry after an API error. Repeated normalized searches
+   reuse cached results for ten minutes, subject to the 100-page retention limit.
+
+After dependency changes (including Phase 5's Caffeine addition), stop the existing
+server with Ctrl+C and start a fresh `sbt run`; source reload alone may retain the
+old build dependencies.
 
 ## Planned features
 

@@ -1,0 +1,10 @@
+@(hashtag: String)
+@* GET keeps searches bookmarkable; Twirl escapes the submitted value. *@
+<form action="@routes.ApplicationController.search()" method="get" role="search">
+    <label for="hashtag">Hashtag</label>
+    <p id="hashtag-help">Enter a hashtag without #, for example java. Use up to 100 letters, numbers, or underscores, including at least one letter.</p>
+    <div class="search-controls">
+        <input id="hashtag" name="hashtag" type="text" value="@hashtag" required aria-describedby="hashtag-help" placeholder="java">
+        <button type="submit">Search posts</button>
+    </div>
+</form>

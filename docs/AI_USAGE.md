@@ -25,6 +25,7 @@ copies of the complete conversation:
 | 3 | Implement the post domain model, JSON mapping, and readable text conversion with tests. | Implementation and test-design assistance for post values, mapping validation, HTML conversion, and related documentation. |
 | 4 | Implement the asynchronous REST client, error handling, mocked tests, and a separate live connection check. | Implementation and test-design assistance for requests, configuration, safe errors, dependency injection, and documentation; a live smoke check without displaying credentials. |
 | 5 | Implement validation and a bounded asynchronous cache after the Phase 4 commit. | Implementation and test-design assistance for normalized inputs, shared loads, snapshot expiry, failure recovery, and documentation. |
+| 6 | Connect cached searches to the controller, routes, templates, and error UI. | Implementation and test-design assistance for search forms, escaped metadata display, asynchronous error handling, responsive styles, integration tests, and documentation. |
 
 ## Ongoing disclosure
 

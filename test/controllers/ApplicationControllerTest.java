@@ -17,7 +17,8 @@ import static play.test.Helpers.route;
  * Verifies the home action, its route, and the stylesheet used by the page.
  *
  * <p>AI assistance: implementation and test-design support for the Phase 2
- * request to verify concrete responses without calling the live Mastodon API.</p>
+ * request to verify concrete responses without calling the live Mastodon API,
+ * updated in Phase 6 for the search form.</p>
  *
  * @author Nabeel Ali
  */
@@ -40,7 +41,7 @@ public class ApplicationControllerTest extends WithApplication {
     @Test
     public void indexReturnsHomePage() {
         // Waiting for a future is permitted in tests, but not production code.
-        Result result = new ApplicationController().index().toCompletableFuture().join();
+        Result result = new ApplicationController(org.mockito.Mockito.mock(services.SearchService.class)).index().toCompletableFuture().join();
         assertHomePage(result);
     }
 
@@ -91,7 +92,9 @@ public class ApplicationControllerTest extends WithApplication {
         assertEquals("en", document.selectFirst("html").attr("lang"));
         assertEquals("MAWA | Mastodon Analysis Web App", document.title());
         assertEquals("Mastodon Analysis Web App", document.selectFirst("h1").text());
-        assertEquals("The application foundation is ready. Hashtag search, readability, and word statistics will be added in later phases.",
-                document.getElementById("app-status").text());
+        assertEquals("/search", document.selectFirst("form").attr("action"));
+        assertEquals("get", document.selectFirst("form").attr("method"));
+        assertEquals("hashtag", document.selectFirst("input").attr("name"));
+        assertEquals("Search posts", document.selectFirst("button").text());
     }
 }

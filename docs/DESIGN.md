@@ -2,8 +2,7 @@
 
 MAWA separates browser actions, data retrieval, and post analysis. The current
 implementation includes post representation, JSON conversion, and an asynchronous
-REST client, input validation, and a shared cache. The home controller does not
-fetch posts yet; the search UI follows in Phase 6.
+REST client, input validation, a shared cache, and the first-page search interface.
 
 ## Domain model
 
@@ -128,9 +127,26 @@ completed, unexpired values without waiting or issuing HTTP calls. Missing, expi
 or evicted IDs return 410 with instructions to search again. A refreshed query has
 a new ID, so old analysis links cannot silently switch to different posts.
 
+## Browser search flow
+
+The single `ApplicationController` receives injected `SearchService` and exposes
+asynchronous actions for `GET /` and `GET /search?hashtag=...`. The search action
+passes the browser value to the service and renders its completed snapshot. It
+unwraps completion failures, returns controlled error statuses/messages, and uses
+a generic 500 response for unexpected exceptions without exposing their details.
+The home action does not fetch posts.
+
+Shared Twirl layout and form templates support the home, results, and error pages.
+The results template displays posts in API order, all required metadata, UTC times,
+and original links. Twirl escapes all text and attributes; no raw HTML is rendered
+from posts. Empty successful responses remain HTTP 200 with a no-results message.
+A GET form makes search URLs bookmarkable. Error forms retain the submitted term.
+Responsive styles, explicit labels, visible focus indicators, and an alert role
+make the basic interface usable with keyboard navigation and narrow screens.
+
 ## Subsequent components
 
-Phase 6 connects the service to the controller and templates. Later readability
+Phase 7 adds cursor navigation. Later readability
 and word-statistics features will consume `cachedPage` snapshots, with analysis
 explicitly limited to the displayed page. Those UI and analysis paths are not yet
 implemented; cache reuse between actual pages remains to be verified then.

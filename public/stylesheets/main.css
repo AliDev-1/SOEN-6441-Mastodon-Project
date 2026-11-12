@@ -22,3 +22,27 @@ main {
 h1 {
     line-height: 1.2;
 }
+
+/* Keep the search form and result cards readable on desktop and mobile. */
+form { margin: 2rem 0; }
+label { font-weight: 700; }
+#hashtag-help, .handle { color: #465a70; }
+.search-controls { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+input, button { font: inherit; padding: 0.65rem 0.9rem; border-radius: 0.35rem; }
+input { flex: 1; min-width: 10rem; border: 1px solid #65778a; }
+button { background: #254c82; color: white; border: 1px solid #254c82; cursor: pointer; }
+a { color: #204d87; }
+a:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid #aa5300; outline-offset: 3px; }
+.post { background: white; border: 1px solid #d4dce5; border-radius: 0.5rem; padding: 1.5rem; margin: 1.5rem 0; overflow-wrap: anywhere; }
+.author { margin: 0; font-size: 1.25rem; }
+.handle { margin-top: 0.25rem; }
+.metadata { display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; font-size: 0.9rem; }
+dt { font-weight: 700; }
+dd { margin: 0; }
+.post-content { white-space: pre-wrap; }
+.notice { padding: 1rem; background: #e5edf6; border-left: 4px solid #254c82; }
+.error { background: #fff0ed; border-color: #a33221; }
+@media (max-width: 600px) {
+    main { margin: 1rem auto; padding: 1rem; }
+    .search-controls { flex-direction: column; }
+}

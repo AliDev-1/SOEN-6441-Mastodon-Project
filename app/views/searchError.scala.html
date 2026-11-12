@@ -1,0 +1,6 @@
+@(hashtag: String, message: String)
+@layout("Search error") {
+    <h1>Unable to complete search</h1>
+    <p class="notice error" role="alert">@message</p>
+    @searchForm(hashtag)
+}

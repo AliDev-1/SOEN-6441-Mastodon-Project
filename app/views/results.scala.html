@@ -1,0 +1,30 @@
+@(page: models.SearchPage)
+@layout("Search results") {
+    <h1>Results for #@page.getHashtag()</h1>
+    @searchForm(page.getHashtag())
+    @* Display only escaped text and validated original links from the domain model. *@
+    <section aria-label="Search results" data-snapshot="@page.getId()">
+        <p class="result-count">@page.getPosts().size() posts on this page (up to 40).</p>
+        @if(page.getPosts().isEmpty()) {
+            <p class="notice" id="no-results">No posts found for this hashtag. Try another hashtag.</p>
+        } else {
+            @for(post <- page.getPosts()) {
+                <article class="post">
+                    <h2 class="author">@post.getAuthorName()</h2>
+                    <p class="handle">@@@post.getAuthorHandle()</p>
+                    <dl class="metadata">
+                        <div><dt>Published (UTC)</dt><dd><time datetime="@post.getCreatedAt().toString()">@post.getCreatedAt().toString()</time></dd></div>
+                        <div><dt>Language</dt><dd>@post.getLanguage()</dd></div>
+                        <div><dt>Visibility</dt><dd>@post.getVisibility()</dd></div>
+                    </dl>
+                    @if(post.getContent().isEmpty()) {
+                        <p class="post-content">This post has no text content.</p>
+                    } else {
+                        <p class="post-content">@post.getContent()</p>
+                    }
+                    <a class="original-link" href="@post.getUrl()" rel="nofollow noreferrer">View original post</a>
+                </article>
+            }
+        }
+    </section>
+}

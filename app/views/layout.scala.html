@@ -1,0 +1,17 @@
+@(title: String)(content: Html)
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>@title | Mastodon Analysis Web App</title>
+        <link rel="stylesheet" href="@routes.Assets.versioned("stylesheets/main.css")">
+    </head>
+    <body>
+        <main>
+            <p class="eyebrow">SOEN 6441 · Delivery 1</p>
+            <a class="home-link" href="@routes.ApplicationController.index()">MAWA home</a>
+            @content
+        </main>
+    </body>
+</html>

@@ -9,8 +9,8 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | 2 | Play skeleton, tested home page, sbt quality tasks | Committed by Nabeel as `b584e2a` | `build: initialize Play app and quality tools` |
 | 3 | Domain classes, JSON mapping, readable text | Committed by Nabeel as `9f8d7c2` | `feat: add post model and response mapping` |
 | 4 | Asynchronous REST client and error handling | Committed by Nabeel as `19bcc6b` | `feat: retrieve Mastodon hashtag posts asynchronously` |
-| 5 | Validation and shared bounded cache | Implemented and verified; awaiting manual commit | `feat: validate and cache hashtag searches` |
-| 6 | Search controller, routes, templates, error UI | Not started | `feat: display searchable Mastodon results` |
+| 5 | Validation and shared bounded cache | Committed by Nabeel as `8359f87` | `feat: validate and cache hashtag searches` |
+| 6 | Search controller, routes, templates, error UI | Implemented and verified; awaiting manual commit | `feat: display searchable Mastodon results` |
 | 7 | Cursor pagination and cached page navigation | Not started | `feat: paginate cached hashtag results` |
 | 8 | Readability scores and post details page | Not started | `feat: add post readability and details` |
 | 9 | Streams word analysis and statistics page | Not started | `feat: add word frequency statistics with streams` |
@@ -90,3 +90,18 @@ instructions have been prepared. Record their actual completion separately.
   coverage across all nine handwritten production classes; Javadoc passed without warnings.
 - The service is ready for Phase 6; the homepage and running server are unchanged.
 - No commit, push, or tag was created by the assistant.
+
+## Phase 6 handoff
+
+- Connected the existing singleton service through the single application controller.
+- Added a GET search form, first-page results with all required metadata, shared
+  layout, responsive styles, empty-results state, and safe error responses.
+- Templates escape input and post content; original URLs come from validated models.
+- Route tests mock external work and verify input validation, cached reuse, all
+  displayed fields, escaping, empty results, asynchronous completion, and errors.
+- The existing localhost process reported a missing Caffeine dependency from Phase 5;
+  restart that server to reload build dependencies. It was not stopped or modified.
+- Browser preview was unavailable; rendered HTML is verified by automated route tests.
+- `sbt test jacoco javadoc` passed: 57 tests, 100% line/method/branch coverage
+  across handwritten production code, and successful Javadoc generation.
+- Pagination controls and analyses remain later phases. No commit or push was made.

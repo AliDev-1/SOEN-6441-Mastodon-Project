@@ -1,5 +1,6 @@
-# The single application controller serves the home page.
+# The single application controller serves the home and first search page.
 GET     /                       controllers.ApplicationController.index()
+GET     /search                 controllers.ApplicationController.search(hashtag: String ?= "")
 
 # Play's built-in asset controller serves static resources.
 GET     /assets/*file            controllers.Assets.versioned(path="/public", file: Asset)
