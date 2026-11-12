@@ -1,4 +1,4 @@
-@(page: models.SearchPage, previousId: String, pageNumber: Int)
+@(page: models.SearchPage, previousId: String, pageNumber: Int, scores: java.util.Map[String, models.Readability])
 @layout("Search results") {
     <h1>Results for #@page.getHashtag()</h1>
     @searchForm(page.getHashtag())
@@ -15,7 +15,7 @@
         } else {
             @for(post <- page.getPosts()) {
                 <article class="post">
-                    <h2 class="author">@post.getAuthorName()</h2>
+                    <h2 class="author"><a href="@routes.ApplicationController.details(page.getId(), post.getId(), pageNumber)">@post.getAuthorName()</a></h2>
                     <p class="handle">@@@post.getAuthorHandle()</p>
                     <dl class="metadata">
                         <div><dt>Published (UTC)</dt><dd><time datetime="@post.getCreatedAt().toString()">@post.getCreatedAt().toString()</time></dd></div>
@@ -27,6 +27,8 @@
                     } else {
                         <p class="post-content">@post.getContent()</p>
                     }
+                    @readabilitySummary(scores.get(post.getId()))
+                    <p><a class="details-link" href="@routes.ApplicationController.details(page.getId(), post.getId(), pageNumber)">View post details and readability</a></p>
                     <a class="original-link" href="@post.getUrl()" rel="nofollow noreferrer">View original post</a>
                 </article>
             }

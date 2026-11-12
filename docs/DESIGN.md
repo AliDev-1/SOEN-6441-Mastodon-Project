@@ -183,9 +183,62 @@ on a separate row. A short note explains that the saved link revisits the same
 posts temporarily. Unavailable actions remain visible as disabled text. On narrow
 screens the page number appears above the navigation buttons.
 
+## Readability and post details
+
+`ReadabilityService` is a stateless calculator with no HTTP dependency. It receives
+immutable `Post` values from the retained `SearchPage` and produces `Readability`
+measurements. `analyzePage` indexes measurements by post ID for the overview;
+`findPost` limits details lookup to the requested snapshot and returns 404 if the
+post is absent. It never fetches missing posts from Mastodon.
+
+`GET /results/:id/posts/:postId?pageNumber=...` asynchronously retrieves the snapshot,
+looks up the post, and renders its full metadata, readable text, original link,
+scores, and counts. An expired/evicted snapshot returns 410. The return link retains
+the snapshot ID and browsing position. Overview and details share the same score
+template and calculation, with no additional API call. Scores may be recalculated
+locally; the source posts are the cached data required by the assignment.
+
+The formulas use `W` words, `S` sentences, and `Y` estimated syllables:
+
+- Flesch Reading Ease = `206.835 - 1.015 × (W / S) - 84.6 × (Y / W)`.
+- Flesch–Kincaid Grade Level = `0.39 × (W / S) + 11.8 × (Y / W) - 15.59`.
+
+These coefficients and the English interpretation follow
+[Microsoft's readability documentation](https://support.microsoft.com/en-us/word/get-your-document-s-readability-and-level-statistics-in-microsoft-word).
+Ratios use floating-point division. Scores retain full precision in the model and
+are displayed with two decimals and a locale-independent decimal point. Scores are
+not clamped: short text can yield ease above 100 or negative grade levels. Higher
+ease generally indicates easier reading; grade level estimates US school grade.
+
+### Counting and language policy
+
+These are application heuristics, not a dictionary-based pronunciation engine:
+
+- Accept `en` and case-insensitive `en-...` language tags. `Unknown` is processed
+  with an explicit English-based-estimate label; known other languages are unavailable.
+- Remove HTTP(S) and `www.` URLs through the next whitespace before counting.
+- Match Unicode letter sequences with internal straight/curly apostrophes as words.
+  Hyphens separate words. Hashtag/mention markers are ignored, but their letters
+  count as words. Numbers and emoji do not count as words.
+- Split sentences on runs of `.`, `!`, or `?`; count only fragments containing words.
+  A trailing or unpunctuated fragment with words counts as one sentence.
+- Lowercase each word and fold accents, retaining ASCII letters for syllable counting.
+  Count groups of `a/e/i/o/u/y`. Subtract one for a final silent `e` when there is more
+  than one group, except consonant-plus-`le` endings. Keep at least one syllable.
+- If no words remain, return an unavailable result without division by zero. Zero
+  placeholder fields in unavailable measurements are never displayed as scores.
+
+Examples: `The cat sat on the mat.` has 6 words, 1 sentence, 6 syllables, ease
+116.145 and grade -1.45 before display rounding. `A simple sentence.` has 3 words,
+1 sentence, 5 syllables, ease 62.79 and grade approximately 5.246667.
+
+Abbreviations, decimals, names, acronyms, irregular vowel sounds, borrowed words,
+and URL-adjacent punctuation can make these counts inaccurate. Unknown-language
+metadata is not language detection; mixed-language posts also remain approximate.
+Short social posts provide especially weak evidence for a reading grade. The UI
+labels scores as estimates and exposes the counting rules on the details page.
+
 ## Subsequent components
 
-Later readability
-and word-statistics features will consume `cachedPage` snapshots, with analysis
-explicitly limited to the displayed page. Those UI and analysis paths are not yet
-implemented; cache reuse between actual pages remains to be verified then.
+Phase 9 adds Java Streams word statistics over the displayed cached page. This
+pipeline is separate from per-post readability and remains to be implemented.

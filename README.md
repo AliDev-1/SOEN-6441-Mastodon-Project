@@ -5,10 +5,10 @@ Mastodon hashtag posts and display them with readability scores and word statist
 
 ## Current status
 
-Phase 7 adds numbered navigation, **Previous page**, **Next page · Older posts**,
-**Back to first page**, and **Open saved version of this page**. Searches show up to 40 posts per page with all required metadata.
-Navigation reuses cached results; expired snapshot links explain that a new search
-is needed. Readability and word statistics follow in later phases.
+Phase 8 adds Flesch Reading Ease and Flesch–Kincaid Grade Level estimates to each
+supported post, plus a details page with the exact cached content and calculation
+counts. Numbered pagination and all metadata remain available. Word statistics
+follow in Phase 9.
 
 ## Run locally
 
@@ -49,17 +49,30 @@ See [testing notes](docs/TESTING.md) for the current test cases and coverage rul
    **Back to first page** repeats the initial search.
 5. **Open saved version of this page** preserves the exact displayed snapshot while it is
    retained. Expired or evicted snapshot links return 410 and ask for a new search.
-6. Correct invalid input or retry after an API error. Repeated normalized searches
+6. Click an author's name or **View post details and readability** to open the saved
+   post, both scores, and the word/sentence/syllable counts. **Back to results** keeps
+   your page number and snapshot without another API request.
+7. Correct invalid input or retry after an API error. Repeated normalized searches
    reuse cached results for ten minutes, subject to the 100-page retention limit.
 
 After dependency changes (including Phase 5's Caffeine addition), stop the existing
 server with Ctrl+C and start a fresh `sbt run`; source reload alone may retain the
 old build dependencies.
 
+## Readability assumptions
+
+Scores estimate English text and use an approximate syllable counter. Known
+non-English posts and posts without analyzable words show an unavailable message.
+Unknown-language posts are labeled as English-based estimates. URLs are excluded;
+words, sentence boundaries, abbreviations, and pronunciation are approximated.
+Results are displayed to two decimal places without capping: negative grade levels
+and Reading Ease above 100 can occur, especially for very short posts. These scores
+do not measure meaning or writing quality. Details and formulas are documented in
+[the design notes](docs/DESIGN.md).
+
 ## Planned features
 
 - Cached results shared by the search and analysis pages.
-- Flesch Reading Ease and Flesch–Kincaid Grade Level, with a post details page.
 - A linked word-frequency page implemented with Java Streams.
 
 The application will use Java 21, Play Java, sbt, and ordinary server-rendered pages.

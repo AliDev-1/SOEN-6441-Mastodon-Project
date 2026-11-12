@@ -1,0 +1,9 @@
+@(score: models.Readability)
+@* Keep the same score presentation in the overview and the post details page. *@
+<section class="readability" aria-label="Readability estimates">
+    @if(score.isAvailable()) {
+        <p><strong>Flesch Reading Ease:</strong> <span class="reading-ease">@("%.2f".formatLocal(java.util.Locale.ROOT, score.getReadingEase()))</span></p>
+        <p><strong>Flesch–Kincaid Grade Level:</strong> <span class="grade-level">@("%.2f".formatLocal(java.util.Locale.ROOT, score.getGradeLevel()))</span></p>
+    }
+    <p class="readability-note">@score.getNote()</p>
+</section>

@@ -27,6 +27,7 @@ copies of the complete conversation:
 | 5 | Implement validation and a bounded asynchronous cache after the Phase 4 commit. | Implementation and test-design assistance for normalized inputs, shared loads, snapshot expiry, failure recovery, and documentation. |
 | 6 | Connect cached searches to the controller, routes, templates, and error UI. | Implementation and test-design assistance for search forms, escaped metadata display, asynchronous error handling, responsive styles, integration tests, and documentation. |
 | 7 | Implement cursor pagination and cached page navigation after the Phase 6 commit. | Implementation and test-design assistance for opaque cursors, snapshot routes, predecessor lookup, pagination UI, expiry/error cases, and documentation; follow-up assistance for clearer labels, placement, and numbered navigation. |
+| 8 | Implement post readability and cached post details after the Phase 7 commit. | Implementation and test-design assistance for Flesch formulas, English text heuristics, immutable measurements, overview/detail templates, no-refetch integration tests, and documented limitations. |
 
 ## Ongoing disclosure
 

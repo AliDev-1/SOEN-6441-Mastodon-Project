@@ -1,0 +1,39 @@
+@(page: models.SearchPage, post: models.Post, score: models.Readability, pageNumber: Int)
+@layout("Post details") {
+    <a class="back-to-results" href="@routes.ApplicationController.cached(page.getId(), pageNumber)">← Back to results · Page @pageNumber</a>
+    <h1>Post details</h1>
+    <p>From the saved results for #@page.getHashtag().</p>
+    <article class="post">
+        <h2 class="author">@post.getAuthorName()</h2>
+        <p class="handle">@@@post.getAuthorHandle()</p>
+        <dl class="metadata">
+            <div><dt>Published (UTC)</dt><dd><time datetime="@post.getCreatedAt().toString()">@post.getCreatedAt().toString()</time></dd></div>
+            <div><dt>Language</dt><dd>@post.getLanguage()</dd></div>
+            <div><dt>Visibility</dt><dd>@post.getVisibility()</dd></div>
+        </dl>
+        @if(post.getContent().isEmpty()) {
+            <p class="post-content">This post has no text content.</p>
+        } else {
+            <p class="post-content">@post.getContent()</p>
+        }
+        <a class="original-link" href="@post.getUrl()" rel="nofollow noreferrer">View original post</a>
+        <h2>Readability</h2>
+        @readabilitySummary(score)
+        @if(score.isAvailable()) {
+            <dl class="readability-counts metadata">
+                <div><dt>Words</dt><dd class="word-count">@score.getWords()</dd></div>
+                <div><dt>Sentences</dt><dd class="sentence-count">@score.getSentences()</dd></div>
+                <div><dt>Estimated syllables</dt><dd class="syllable-count">@score.getSyllables()</dd></div>
+            </dl>
+            <p>A higher Reading Ease score suggests easier reading. Grade Level estimates a US school grade.</p>
+            <p>These are rough English-text estimates, especially for short posts. Scores are not capped and can fall outside the usual ranges.</p>
+            <details class="scoring-method">
+                <summary>How these estimates are calculated</summary>
+                <p>Reading Ease = 206.835 − 1.015 × (words ÷ sentences) − 84.6 × (syllables ÷ words).</p>
+                <p>Grade Level = 0.39 × (words ÷ sentences) + 11.8 × (syllables ÷ words) − 15.59.</p>
+                <p>URLs are excluded. Words are letter sequences with optional internal apostrophes. Periods, question marks, and exclamation marks separate sentences; a fragment with words counts as a sentence.</p>
+                <p>Syllables are estimated from vowel groups with a silent-e adjustment. Abbreviations, names, acronyms, and unusual pronunciations can reduce accuracy.</p>
+            </details>
+        }
+    </article>
+}

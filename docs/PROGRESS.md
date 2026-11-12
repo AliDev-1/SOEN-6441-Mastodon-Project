@@ -11,8 +11,8 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | 4 | Asynchronous REST client and error handling | Committed by Nabeel as `19bcc6b` | `feat: retrieve Mastodon hashtag posts asynchronously` |
 | 5 | Validation and shared bounded cache | Committed by Nabeel as `8359f87` | `feat: validate and cache hashtag searches` |
 | 6 | Search controller, routes, templates, error UI | Committed by Nabeel as `19a2cb4` | `feat: display searchable Mastodon results` |
-| 7 | Cursor pagination and cached page navigation | Implemented and verified; awaiting manual commit | `feat: paginate cached hashtag results` |
-| 8 | Readability scores and post details page | Not started | `feat: add post readability and details` |
+| 7 | Cursor pagination and cached page navigation | Committed by Nabeel as `a433732` | `feat: paginate cached hashtag results` |
+| 8 | Readability scores and post details page | Implemented and verified; awaiting manual commit | `feat: add post readability and details` |
 | 9 | Streams word analysis and statistics page | Not started | `feat: add word frequency statistics with streams` |
 | 10 | Coverage completion and full-flow verification | Not started | `test: complete branch coverage and failure cases` |
 | 11 | Final documentation, diagram, generated Javadoc | Not started | `docs: complete design testing and API documentation` |
@@ -128,3 +128,18 @@ instructions have been prepared. Record their actual completion separately.
 - Page numbers travel with navigation links without fragmenting the shared cache.
 - Added saved-link explanation and visible disabled states for unavailable actions.
 - Expanded route checks for numbered links, invalid numbers, and layout content.
+
+## Phase 8 handoff
+
+- Added immutable readability measurements and a stateless local calculator with
+  Flesch Reading Ease and Flesch–Kincaid Grade Level formulas.
+- Added overview estimates and cached post details with metadata, counts, formula
+  explanations, and a return link preserving the result page number.
+- Added explicit handling for empty/non-English text and unknown-language estimates.
+- Documented word, sentence, and syllable heuristics, rounding, and limitations.
+- Tests cover exact hand-counted formulas, text/language partitions, details links,
+  matching overview/detail values, escaping, no-refetch behavior, and 400/404/410 errors.
+- `sbt test jacoco javadoc` passed: 75 tests, 100% line/method/branch coverage across
+  all eleven handwritten production classes, and successful Javadoc generation.
+- No live Mastodon request, commit, push, tag, or server restart was performed.
+- Browser visual verification remains pending; rendered responses are route-tested.

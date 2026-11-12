@@ -23,7 +23,7 @@ import static play.test.Helpers.*;
 
 /**
  * Exercises search routing, rendering and asynchronous errors without live HTTP.
- * <p>AI assistance: test-design support for the Phase 6 search interface and Phase 7 pagination.</p>
+ * <p>AI assistance: test-design support for the Phase 6 search interface, Phase 7 pagination, and Phase 8 readability.</p>
  * @author Nabeel Ali
  */
 public class SearchControllerTest extends WithApplication {
@@ -114,7 +114,7 @@ public class SearchControllerTest extends WithApplication {
     public void escapesInvalidInputOnError() {
         String input = "\"><script>bad()</script>";
         when(searches.search(input, null)).thenReturn(CompletableFuture.failedFuture(new MastodonException(400, "Invalid hashtag")));
-        Result result = new ApplicationController(searches).search(input).toCompletableFuture().join();
+        Result result = new ApplicationController(searches, new services.ReadabilityService()).search(input).toCompletableFuture().join();
         Document doc = Jsoup.parse(contentAsString(result));
         assertEquals(input, doc.selectFirst("input").val());
         assertTrue(doc.select("script").isEmpty());
@@ -127,7 +127,7 @@ public class SearchControllerTest extends WithApplication {
     public void waitsAsynchronouslyAndHidesUnexpectedFailures() {
         CompletableFuture<SearchPage> pending = new CompletableFuture<>();
         when(searches.search("java", null)).thenReturn(pending);
-        var result = new ApplicationController(searches).search("java").toCompletableFuture();
+        var result = new ApplicationController(searches, new services.ReadabilityService()).search("java").toCompletableFuture();
         assertFalse(result.isDone());
         pending.completeExceptionally(new IllegalStateException("private credential details"));
         assertEquals(500, result.join().status());
@@ -135,7 +135,7 @@ public class SearchControllerTest extends WithApplication {
         assertTrue(contentAsString(result.join()).contains("Something went wrong while searching. Please try again."));
         // A wrapper without a cause is also handled without revealing its text.
         when(searches.search("java", null)).thenReturn(CompletableFuture.failedFuture(new CompletionException("private", null)));
-        assertEquals(500, new ApplicationController(searches).search("java").toCompletableFuture().join().status());
+        assertEquals(500, new ApplicationController(searches, new services.ReadabilityService()).search("java").toCompletableFuture().join().status());
     }
     /** Verifies real validation and cache reuse across repeated browser requests.
      * @author Nabeel Ali
@@ -252,5 +252,93 @@ public class SearchControllerTest extends WithApplication {
             }
         }
         verifyNoInteractions(searches);
+    }
+    /** Follows a result's details link and confirms identical scores without refetching.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void showsReadabilityFromExactCachedPost() {
+        services.MastodonClient client = mock(services.MastodonClient.class);
+        Post post = new Post("opaque:post", "<script>Author</script>", "author", Instant.EPOCH,
+                "en", "The cat sat on the mat.", "https://example.org/1", "public");
+        when(client.fetchPosts("java", "")).thenReturn(CompletableFuture.completedFuture(List.of(post)));
+        Application integrated = new GuiceApplicationBuilder()
+                .overrides(bind(services.MastodonClient.class).toInstance(client)).build();
+        running(integrated, () -> {
+            Result search = route(integrated, new Http.RequestBuilder().method("GET").uri("/search?hashtag=java"));
+            Document overview = Jsoup.parse(contentAsString(search));
+            assertEquals("116.15", overview.selectFirst(".reading-ease").text());
+            assertEquals("-1.45", overview.selectFirst(".grade-level").text());
+            String detailsUrl = overview.selectFirst(".details-link").attr("href");
+            assertEquals(detailsUrl, overview.selectFirst(".author a").attr("href"));
+            Result details = route(integrated, new Http.RequestBuilder().method("GET").uri(detailsUrl));
+            assertEquals(200, details.status());
+            Document doc = Jsoup.parse(contentAsString(details));
+            assertEquals("Post details", doc.selectFirst("h1").text());
+            assertEquals(post.getAuthorName(), doc.selectFirst(".author").text());
+            assertTrue(doc.select("script").isEmpty());
+            assertEquals(post.getContent(), doc.selectFirst(".post-content").text());
+            assertEquals(overview.selectFirst(".reading-ease").text(), doc.selectFirst(".reading-ease").text());
+            assertEquals(overview.selectFirst(".grade-level").text(), doc.selectFirst(".grade-level").text());
+            assertEquals("6", doc.selectFirst(".word-count").text());
+            assertEquals("1", doc.selectFirst(".sentence-count").text());
+            assertEquals("6", doc.selectFirst(".syllable-count").text());
+            assertEquals(post.getUrl(), doc.selectFirst(".original-link").attr("href"));
+            Result back = route(integrated, new Http.RequestBuilder().method("GET").uri(doc.selectFirst(".back-to-results").attr("href")));
+            assertEquals(contentAsString(search), contentAsString(back));
+            verify(client, times(1)).fetchPosts("java", "");
+            verifyNoMoreInteractions(client);
+        });
+    }
+
+    /** Checks unavailable scores, escaped detail content, and unknown-language labels.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void rendersReadabilityAvailability() {
+        Post empty = new Post("empty", "Author", "author", Instant.EPOCH, "en", "", "https://example.org/1", "public");
+        Post french = new Post("fr", "Author", "author", Instant.EPOCH, "fr", "<img src=x onerror=bad()> Bonjour", "https://example.org/2", "public");
+        Post unknown = new Post("unknown", "Author", "author", Instant.EPOCH, "Unknown", "Cat", "https://example.org/3", "public");
+        when(searches.cachedPage("snapshot")).thenReturn(CompletableFuture.completedFuture(new SearchPage("snapshot", "java", "cursor", List.of(empty, french, unknown))));
+        for (Post post : List.of(empty, french)) {
+            Result result = route(app, new Http.RequestBuilder().method("GET").uri("/results/snapshot/posts/" + post.getId() + "?pageNumber=3"));
+            assertEquals(200, result.status());
+            Document doc = Jsoup.parse(contentAsString(result));
+            assertTrue(doc.select(".reading-ease, .grade-level, .readability-counts, img").isEmpty());
+            assertTrue(doc.selectFirst(".readability-note").text().contains("unavailable"));
+            assertEquals("/results/snapshot?pageNumber=3", doc.selectFirst(".back-to-results").attr("href"));
+        }
+        Result result = route(app, new Http.RequestBuilder().method("GET").uri("/results/snapshot/posts/unknown"));
+        assertTrue(Jsoup.parse(contentAsString(result)).selectFirst(".readability-note").text().contains("language is unknown"));
+    }
+
+    /** Checks invalid navigation, expired snapshots and post IDs absent from a snapshot.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void handlesDetailErrors() {
+        Result invalid = route(app, new Http.RequestBuilder().method("GET").uri("/results/snapshot/posts/post?pageNumber=0"));
+        assertEquals(400, invalid.status());
+        verifyNoInteractions(searches);
+        when(searches.cachedPage("expired")).thenReturn(CompletableFuture.failedFuture(new MastodonException(410, "Please search again.")));
+        Result expired = route(app, new Http.RequestBuilder().method("GET").uri("/results/expired/posts/post"));
+        assertEquals(410, expired.status());
+        when(searches.cachedPage("snapshot")).thenReturn(CompletableFuture.completedFuture(new SearchPage("snapshot", "java", "", List.of())));
+        Result missing = route(app, new Http.RequestBuilder().method("GET").uri("/results/snapshot/posts/missing"));
+        assertEquals(404, missing.status());
+        assertTrue(contentAsString(missing).contains("not part of the saved results"));
+    }
+
+    /** Checks the details action returns before a pending snapshot lookup completes.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void resolvesDetailsAsynchronously() {
+        CompletableFuture<SearchPage> pending = new CompletableFuture<>();
+        when(searches.cachedPage("pending")).thenReturn(pending);
+        var result = new ApplicationController(searches, new services.ReadabilityService()).details("pending", "missing", 1).toCompletableFuture();
+        assertFalse(result.isDone());
+        pending.complete(new SearchPage("pending", "java", "", List.of()));
+        assertEquals(404, result.join().status());
     }
 }

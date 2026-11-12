@@ -30,8 +30,8 @@ choices are distinguished from assignment requirements below.
 
 ## Readability and word statistics
 
-- [ ] Show Flesch Reading Ease and Flesch–Kincaid Grade Level for post content (4.3).
-- [ ] Clicking a result opens a post details page with readability information (4.3).
+- [x] Show Flesch Reading Ease and Flesch–Kincaid Grade Level for post content (4.3).
+- [x] Clicking a result opens a post details page with readability information (4.3).
 - [ ] Link word statistics from the search term above the results (4.3).
 - [ ] Count unique words and display their frequencies in descending order (4.3).
 - [ ] Use Java Streams for word-content processing (4.3).

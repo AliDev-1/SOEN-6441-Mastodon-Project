@@ -146,6 +146,30 @@ preservation in previous/next/saved links, disabled unavailable actions, explana
 labels, and rejection of invalid numbers before service access.
 No live API requests or browser visual verification were performed in this phase.
 
+## Phase 8 cases
+
+| Partition | Expected result |
+| --- | --- |
+| `The cat sat on the mat.` | 6 words, 1 sentence, 6 syllables; ease 116.145, grade -1.45 |
+| `The cat sat. A dog ran!` | 6 words, 2 sentences; ease 119.19, grade -2.62 |
+| `A simple sentence.` | 3 words, 5 syllables; ease 62.79, grade approximately 5.246667 |
+| Silent e, consonant-le, vowel groups, y, no vowels, accents | Counts follow the documented heuristic |
+| Apostrophes, tags, mentions, hyphens, URLs, emoji, repeated punctuation | Documented words, syllables and sentence boundaries |
+| Empty, whitespace, punctuation-only, number/emoji-only, URL-only | Unavailable; no displayed zero scores or division by zero |
+| English, regional/case-varied English, unknown language, other languages | English scores, labeled unknown estimates, or unavailable reason |
+| Per-post score map and post lookup | Exact membership; unmodifiable map; 404 for absent post |
+| Overview link → details → results | Identical scores and original content, counts shown, one API load |
+| Escaped author/text and empty/non-English details | No executable HTML; unavailable explanation and no score/count fields |
+| Invalid page number, missing post, expired snapshot | 400, 404, and 410 respectively |
+| Pending snapshot lookup | Details action returns asynchronously |
+
+`ReadabilityServiceTest` asserts independently hand-counted examples rather than
+reimplementing the algorithm in its assertions. `ReadabilityTest` checks exposed
+values. Controller integration tests exercise the actual service and templates
+with a mocked Mastodon boundary. Phase 8 passed 75 tests with 100% line, method,
+and branch coverage across eleven handwritten production classes. Javadoc passed.
+No live API or browser visual verification was performed in this phase.
+
 ## Coverage rules
 
 JaCoCo measures all compiled application classes except compiler-generated routes,

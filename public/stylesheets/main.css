@@ -63,3 +63,11 @@ a.page-button:hover { background: #e5edf6; }
     .page-number { grid-column: 1 / -1; grid-row: 1; text-align: center; }
     .page-tools { flex-direction: column; }
 }
+
+/* Distinguish local readability estimates from the original post content. */
+.readability { margin-top: 1rem; padding: 0.75rem 1rem; border-left: 3px solid #65778a; background: #f4f6f8; }
+.readability p { margin: 0.25rem 0; }
+.readability-note { font-size: 0.9rem; color: #465a70; }
+.scoring-method { margin-top: 1rem; }
+.scoring-method summary { cursor: pointer; font-weight: 700; }
+summary:focus-visible { outline: 3px solid #aa5300; outline-offset: 3px; }

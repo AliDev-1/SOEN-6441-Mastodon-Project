@@ -2,6 +2,8 @@ package controllers;
 
 import jakarta.inject.Inject;
 import services.SearchService;
+import services.ReadabilityService;
+import models.Post;
 import models.SearchPage;
 import services.MastodonException;
 import java.util.concurrent.CompletionException;
@@ -14,7 +16,7 @@ import play.mvc.Result;
  * Handles browser requests and delegates application work to services.
  *
  * <p>AI assistance: implementation support for the Phase 2 request for one
- * asynchronous controller and a tested home page; Phase 6 search and error UI; Phase 7 pagination.</p>
+ * asynchronous controller and a tested home page; Phase 6 search and error UI; Phase 7 pagination; Phase 8 cached readability and details.</p>
  *
  * @author Nabeel Ali
  */
@@ -22,16 +24,20 @@ public class ApplicationController extends Controller {
 
     /** Coordinates validated, cached searches. */
     private final SearchService searches;
+    /** Calculates local readability estimates from the cached posts. */
+    private final ReadabilityService readability;
 
     /**
      * Creates the application controller for Play dependency injection.
      *
      * @param searches the asynchronous search service
+     * @param readability the local readability calculator
      * @author Nabeel Ali
      */
     @Inject
-    public ApplicationController(SearchService searches) {
+    public ApplicationController(SearchService searches, ReadabilityService readability) {
         this.searches = searches;
+        this.readability = readability;
     }
 
     /**
@@ -90,6 +96,24 @@ public class ApplicationController extends Controller {
     }
 
     /**
+     * Renders a post and its readability from an existing snapshot without refetching.
+     * @param id the snapshot identifier
+     * @param postId the opaque post identifier within that snapshot
+     * @param pageNumber the result page position for the return link
+     * @return the post details or a controlled error response
+     * @author Nabeel Ali
+     */
+    public CompletionStage<Result> details(String id, String postId, int pageNumber) {
+        if (invalidPageNumber(pageNumber)) {
+            return CompletableFuture.completedFuture(searchError("", new MastodonException(400, "Invalid page number. Please search again.")));
+        }
+        return searches.cachedPage(id).thenApply(page -> {
+            Post post = readability.findPost(page, postId);
+            return ok(views.html.details.render(page, post, readability.analyze(post), pageNumber));
+        }).exceptionally(failure -> searchError("", failure));
+    }
+
+    /**
      * Renders results with a predecessor link only while that snapshot is cached.
      * @param page the completed result snapshot
      * @param pageNumber the position shown in the navigation
@@ -97,7 +121,7 @@ public class ApplicationController extends Controller {
      * @author Nabeel Ali
      */
     private Result renderPage(SearchPage page, int pageNumber) {
-        return ok(views.html.results.render(page, searches.previousPageId(page), pageNumber));
+        return ok(views.html.results.render(page, searches.previousPageId(page), pageNumber, readability.analyzePage(page)));
     }
 
     /**
