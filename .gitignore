@@ -1,0 +1,27 @@
+# Local credentials and environment files; keep the safe configuration example.
+.env
+.env.*
+!.env.example
+conf/application.local.conf
+
+# sbt build products and local tool metadata.
+target/
+project/project/
+.bsp/
+.bloop/
+.metals/
+.scala-build/
+
+# Editor and operating system files.
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Runtime logs and temporary submission packages.
+logs/
+*.log
+tmp/
+dist/
+
+# Generated documentation copied into docs/ for submission remains trackable.
