@@ -24,6 +24,7 @@ copies of the complete conversation:
 | 2 | Move on to Phase 2 after the manual Phase 1 commit and push. | Play skeleton, build configuration, JDK setup, home page, controller and route tests, coverage and Javadoc tasks, and documentation updates. |
 | 3 | Implement the post domain model, JSON mapping, and readable text conversion with tests. | Implementation and test-design assistance for post values, mapping validation, HTML conversion, and related documentation. |
 | 4 | Implement the asynchronous REST client, error handling, mocked tests, and a separate live connection check. | Implementation and test-design assistance for requests, configuration, safe errors, dependency injection, and documentation; a live smoke check without displaying credentials. |
+| 5 | Implement validation and a bounded asynchronous cache after the Phase 4 commit. | Implementation and test-design assistance for normalized inputs, shared loads, snapshot expiry, failure recovery, and documentation. |
 
 ## Ongoing disclosure
 

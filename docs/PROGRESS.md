@@ -8,8 +8,8 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | 1 | Requirements, allocation, exclusions, setup instructions | Repository preparation complete; external setup pending | `docs: record delivery one scope and setup` |
 | 2 | Play skeleton, tested home page, sbt quality tasks | Committed by Nabeel as `b584e2a` | `build: initialize Play app and quality tools` |
 | 3 | Domain classes, JSON mapping, readable text | Committed by Nabeel as `9f8d7c2` | `feat: add post model and response mapping` |
-| 4 | Asynchronous REST client and error handling | Implemented and verified; awaiting manual commit | `feat: retrieve Mastodon hashtag posts asynchronously` |
-| 5 | Validation and shared bounded cache | Not started | `feat: validate and cache hashtag searches` |
+| 4 | Asynchronous REST client and error handling | Committed by Nabeel as `19bcc6b` | `feat: retrieve Mastodon hashtag posts asynchronously` |
+| 5 | Validation and shared bounded cache | Implemented and verified; awaiting manual commit | `feat: validate and cache hashtag searches` |
 | 6 | Search controller, routes, templates, error UI | Not started | `feat: display searchable Mastodon results` |
 | 7 | Cursor pagination and cached page navigation | Not started | `feat: paginate cached hashtag results` |
 | 8 | Readability scores and post details page | Not started | `feat: add post readability and details` |
@@ -77,3 +77,16 @@ instructions have been prepared. Record their actual completion separately.
   or post contents. The runner was removed and is not part of the unit test suite.
 - The home page is unchanged; caching and the search UI are later phases.
 - No commit, push, or change to the developer's running server was made.
+
+## Phase 5 handoff
+
+- Added `SearchInput`, immutable `SearchPage` snapshots, and singleton `SearchService`.
+- Normalized searches share pending and completed requests. Cache keys include
+  instance, hashtag, and cursor; retained pages expire ten minutes after completion.
+- Caffeine bounds retained pages to 100 and removes failed loads. Caller cancellation
+  does not cancel a shared request. Expired or evicted snapshot links return 410.
+- Tests use mocked API responses and a controllable clock; no live calls or sleeps.
+- `sbt test jacoco javadoc` passed: 51 tests, 100% line, method, and branch
+  coverage across all nine handwritten production classes; Javadoc passed without warnings.
+- The service is ready for Phase 6; the homepage and running server are unchanged.
+- No commit, push, or tag was created by the assistant.

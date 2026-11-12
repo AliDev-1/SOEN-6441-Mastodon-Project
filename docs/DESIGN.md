@@ -2,8 +2,8 @@
 
 MAWA separates browser actions, data retrieval, and post analysis. The current
 implementation includes post representation, JSON conversion, and an asynchronous
-REST client. The home controller does not fetch posts yet; the search service and
-UI follow in later phases.
+REST client, input validation, and a shared cache. The home controller does not
+fetch posts yet; the search UI follows in Phase 6.
 
 ## Domain model
 
@@ -96,9 +96,41 @@ its status code to render an appropriate error page.
 Upstream authentication failures do not return 401 to the browser because the
 credentials belong to the server configuration, not a browser login session.
 
+## Validated search and cached snapshots
+
+`SearchInput` strips surrounding whitespace, applies Unicode NFC normalization,
+and lowercases hashtags with `Locale.ROOT`. This application accepts 1–100 Unicode
+letters, marks, numbers, or underscores, including at least one letter. A leading
+`#`, embedded whitespace, and punctuation are rejected with 400. These character
+and length rules are application decisions, not claims about every valid Mastodon
+tag. Cursors remain opaque, case-sensitive strings: null/blank means the first
+page; other values allow up to 256 characters without separators or controls.
+
+`SearchService.search` validates before requesting data and returns a
+`CompletionStage<SearchPage>`. Its singleton Caffeine async cache keys each page by
+configured instance, normalized hashtag, and requested cursor. Atomic loading
+shares overlapping requests; failed loads are removed so the next call can retry.
+The returned future is a copy, preventing a caller from cancelling the shared load.
+No production code blocks on a future.
+
+The cache retains up to 100 completed pages after maintenance. Expiry is ten minutes
+after a successful load completes, and reads do not extend it. Pending loads are
+shared but are not an admission/concurrency limit; transport timeouts bound their
+duration. Cache data lives in memory and disappears when the app restarts. Caffeine
+performs size maintenance through a direct executor; callbacks contain only short
+in-memory operations. The policy follows Caffeine's official
+[population](https://github.com/ben-manes/caffeine/wiki/Population) and
+[eviction](https://github.com/ben-manes/caffeine/wiki/Eviction) documentation.
+
+`SearchPage` defensively copies the post list and records the normalized term,
+requested cursor, and a unique snapshot ID. `cachedPage(id)` scans the small cache's
+completed, unexpired values without waiting or issuing HTTP calls. Missing, expired,
+or evicted IDs return 410 with instructions to search again. A refreshed query has
+a new ID, so old analysis links cannot silently switch to different posts.
+
 ## Subsequent components
 
-The search service will cache the client's domain values for reuse by display
-and analysis. Readability will calculate scores from
-plain text. Word statistics will use Java Streams over the cached posts. Those
-analysis pipelines are planned, not implemented in Phase 4.
+Phase 6 connects the service to the controller and templates. Later readability
+and word-statistics features will consume `cachedPage` snapshots, with analysis
+explicitly limited to the displayed page. Those UI and analysis paths are not yet
+implemented; cache reuse between actual pages remains to be verified then.

@@ -5,10 +5,10 @@ Mastodon hashtag posts and display them with readability scores and word statist
 
 ## Current status
 
-Phase 4 adds an asynchronous Mastodon client with a 40-post request limit,
-timeouts, and controlled errors. A live request successfully retrieved and mapped
-40 posts. The home page still shows the application foundation; the search UI,
-caching, and analysis follow in later phases.
+Phase 5 adds validated hashtag searches and a shared asynchronous page cache
+(maximum 100 retained pages, ten-minute expiry). Repeated searches reuse responses;
+future analysis links can retrieve an exact cached snapshot without another API
+request. The home page remains unchanged until the Phase 6 search UI.
 
 ## Run locally
 

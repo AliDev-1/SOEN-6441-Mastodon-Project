@@ -12,6 +12,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       guice,
       ws,
+      "com.github.ben-manes.caffeine" % "caffeine" % "3.2.3",
       "org.jsoup" % "jsoup" % "1.21.2",
       "junit" % "junit" % "4.13.2" % Test,
       "org.mockito" % "mockito-core" % "5.24.0" % Test

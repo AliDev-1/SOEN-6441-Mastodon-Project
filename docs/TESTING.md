@@ -2,7 +2,7 @@
 
 Run `sbt test` for JUnit tests and `sbt jacoco` for tests with coverage. The tests
 use an isolated Play application and never contact the live Mastodon API.
-Mockito is available for the client and service tests added in later phases.
+Mockito isolates the client and search service from the network.
 
 ## Phase 2 cases
 
@@ -70,6 +70,32 @@ A separate, temporary manual runner exercised the actual client using local
 configuration and successfully mapped 40 `java` posts. It printed only the count,
 closed its application, and was removed afterward. Live verification is separate
 from the reproducible automated test suite.
+
+## Phase 5 cases
+
+| Partition | Expected behavior |
+| --- | --- |
+| Null/blank, hash prefix, spaces, punctuation, numeric-only, overlength hashtag | 400 before client invocation |
+| Mixed case, equivalent Unicode, non-Latin text, 100-character boundary | Normalized valid hashtag |
+| Null/blank cursor, opaque punctuation, 256-character boundary | Valid cursor preserved |
+| Internal separators/controls or overlength cursor | 400 before client invocation |
+| Repeated normalized search, pending request, eight concurrent callers | One API load and the same snapshot |
+| Caller cancellation | Other callers and shared load unaffected |
+| Different term or cursor | Separate response snapshots |
+| Delayed or immediately failed load | Safe failure; next search retries |
+| Empty successful page | Cached normally |
+| Ten-minute boundary, reads just before expiry | Snapshot expires without extending its lifetime |
+| Unknown/null/expired snapshot, refreshed same query | 410 without fetching replacement analysis data |
+| 120 distinct pages | Exactly 100 retained after maintenance |
+| Caller mutates source list or returned list | Defensive copy and unmodifiable cached posts |
+
+`SearchServiceTest` uses Mockito and a monotonic fake clock; expiry requires no
+sleep. Its concurrency test releases eight workers together and waits only in test
+code with timeouts. `SearchPageTest` verifies exact getters, defensive copying,
+unmodifiable results, and null rejection. No test reads credentials or calls the
+live API. Phase 5 passed 51 tests with 100% line, method, and branch coverage
+across all nine handwritten production classes; Javadoc also passed. Actual browser
+search and analysis integration remain for later phases.
 
 ## Coverage rules
 
