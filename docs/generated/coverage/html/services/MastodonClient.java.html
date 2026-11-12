@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MastodonClient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">services</a> &gt; <span class="el_source">MastodonClient.java</span></div><h1>MastodonClient.java</h1><pre class="source lang-java linenums">package services;
+
+import com.typesafe.config.Config;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeoutException;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import models.Post;
+import play.libs.ws.WSClient;
+import play.libs.ws.WSRequest;
+import play.libs.ws.WSResponse;
+
+/**
+ * Retrieves one bounded Mastodon timeline page using non-blocking Play WS calls.
+ *
+ * &lt;p&gt;AI assistance: implementation support for Phase 4 asynchronous requests,
+ * external configuration, and controlled failures.&lt;/p&gt;
+ * @author Nabeel Ali
+ */
+@Singleton
+public final class MastodonClient {
+    /** Play owns this client's lifecycle. */
+    private final WSClient ws;
+    /** Maps response bodies to domain values. */
+    private final MastodonPostMapper mapper;
+    /** The externally configured instance origin. */
+    private final String instance;
+    /** The externally configured user token; never logged. */
+    private final String token;
+
+    /**
+     * Injects the HTTP client, external settings, and post mapper.
+     * @param ws the Play-managed HTTP client
+     * @param config the application configuration
+     * @param mapper the post response mapper
+     * @author Nabeel Ali
+     */
+    @Inject
+<span class="fc" id="L46">    public MastodonClient(WSClient ws, Config config, MastodonPostMapper mapper) {</span>
+<span class="fc" id="L47">        this.ws = ws;</span>
+<span class="fc" id="L48">        this.mapper = mapper;</span>
+        // Missing credentials must not prevent the home page from starting.
+<span class="fc" id="L50">        instance = setting(config, &quot;mastodon.instance&quot;);</span>
+<span class="fc" id="L51">        token = setting(config, &quot;mastodon.accessToken&quot;);</span>
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * Fetches at most 40 posts without waiting for the network response.
+     * The search service will apply full hashtag validation and caching.
+     *
+     * @param hashtag the hashtag without its leading hash
+     * @param maxId an optional pagination cursor; null or blank means the first page
+     * @return an asynchronous post list or a failed stage containing a safe error
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;List&lt;Post&gt;&gt; fetchPosts(String hashtag, String maxId) {
+        try {
+<span class="fc bfc" id="L65" title="All 4 branches covered.">            if (hashtag == null || hashtag.isBlank()) {</span>
+<span class="fc" id="L66">                throw new MastodonException(400, &quot;Enter a hashtag before searching.&quot;);</span>
+            }
+            // Encode the path segment; user input cannot alter the API endpoint.
+<span class="fc" id="L69">            String tag = URLEncoder.encode(hashtag, StandardCharsets.UTF_8).replace(&quot;+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L70">            WSRequest request = ws.url(origin() + &quot;/api/v1/timelines/tag/&quot; + tag)</span>
+<span class="fc" id="L71">                    .addHeader(&quot;Authorization&quot;, &quot;Bearer &quot; + token)</span>
+<span class="fc" id="L72">                    .addHeader(&quot;Accept&quot;, &quot;application/json&quot;)</span>
+<span class="fc" id="L73">                    .addQueryParameter(&quot;limit&quot;, &quot;40&quot;)</span>
+<span class="fc" id="L74">                    .setRequestTimeout(Duration.ofSeconds(10))</span>
+<span class="fc" id="L75">                    .setFollowRedirects(false);</span>
+<span class="fc bfc" id="L76" title="All 4 branches covered.">            if (maxId != null &amp;&amp; !maxId.isBlank()) {</span>
+<span class="fc" id="L77">                request = request.addQueryParameter(&quot;max_id&quot;, maxId);</span>
+            }
+            // Redirects are disabled so credentials stay on the configured origin.
+<span class="fc" id="L80">            return request.get().thenApply(this::readResponse).exceptionally(failure -&gt; {</span>
+                throw safeFailure(failure);
+            });
+<span class="fc" id="L83">        } catch (RuntimeException failure) {</span>
+            // Even a synchronous setup failure follows the asynchronous contract.
+<span class="fc" id="L85">            return CompletableFuture.failedFuture(safeFailure(failure));</span>
+        }
+    }
+
+    /**
+     * Reads an optional configuration string without printing its value.
+     * @param config the application configuration
+     * @param key the setting name
+     * @return a trimmed setting or an empty string
+     * @author Nabeel Ali
+     */
+    private String setting(Config config, String key) {
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        return config.hasPath(key) ? config.getString(key).strip() : &quot;&quot;;</span>
+    }
+
+    /**
+     * Validates the configured HTTPS origin before attaching authorization.
+     * @return the instance origin without a trailing slash
+     * @author Nabeel Ali
+     */
+    private String origin() {
+        try {
+<span class="fc" id="L107">            URI uri = URI.create(instance);</span>
+<span class="fc bfc" id="L108" title="All 4 branches covered.">            if (token.isEmpty() || !&quot;https&quot;.equalsIgnoreCase(uri.getScheme())</span>
+<span class="fc bfc" id="L109" title="All 4 branches covered.">                    || uri.getHost() == null || uri.getRawUserInfo() != null</span>
+<span class="fc bfc" id="L110" title="All 4 branches covered.">                    || uri.getRawQuery() != null || uri.getRawFragment() != null</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                    || !List.of(&quot;&quot;, &quot;/&quot;).contains(uri.getPath())) {</span>
+<span class="fc" id="L112">                throw new IllegalArgumentException();</span>
+            }
+<span class="fc bfc" id="L114" title="All 2 branches covered.">            return instance.endsWith(&quot;/&quot;) ? instance.substring(0, instance.length() - 1) : instance;</span>
+<span class="fc" id="L115">        } catch (IllegalArgumentException failure) {</span>
+            // Do not retain configuration values in the exception or its cause.
+<span class="fc" id="L117">            throw new MastodonException(503, &quot;Configure a valid Mastodon HTTPS instance and access token.&quot;);</span>
+        }
+    }
+
+    /**
+     * Maps successful content and translates upstream status codes.
+     * @param response the completed HTTP response
+     * @return the parsed posts
+     * @author Nabeel Ali
+     */
+    private List&lt;Post&gt; readResponse(WSResponse response) {
+        // A timeline success is HTTP 200; other responses must not reach the mapper.
+<span class="fc bfc" id="L129" title="All 6 branches covered.">        switch (response.getStatus()) {</span>
+            case 200:
+                try {
+<span class="fc" id="L132">                    List&lt;Post&gt; posts = mapper.parse(response.getBody());</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">                    if (posts.size() &gt; 40) {</span>
+<span class="fc" id="L134">                        throw new IllegalArgumentException();</span>
+                    }
+<span class="fc" id="L136">                    return posts;</span>
+<span class="fc" id="L137">                } catch (IllegalArgumentException failure) {</span>
+<span class="fc" id="L138">                    throw new MastodonException(502, &quot;Mastodon returned invalid post data.&quot;);</span>
+                }
+            case 401:
+            case 403:
+<span class="fc" id="L142">                throw new MastodonException(502, &quot;Mastodon authentication failed. Check the access token and read:statuses permission.&quot;);</span>
+            case 429:
+<span class="fc" id="L144">                throw new MastodonException(503, &quot;Mastodon is rate limiting requests. Please try again later.&quot;);</span>
+            case 503:
+<span class="fc" id="L146">                throw new MastodonException(503, &quot;Mastodon is temporarily unavailable. Please try again later.&quot;);</span>
+            case 504:
+<span class="fc" id="L148">                throw new MastodonException(504, &quot;Mastodon took too long to respond. Please try again later.&quot;);</span>
+            default:
+<span class="fc" id="L150">                throw new MastodonException(502, &quot;Unable to retrieve posts from Mastodon. Please try again later.&quot;);</span>
+        }
+    }
+
+    /**
+     * Unwraps asynchronous failures and discards potentially sensitive raw details.
+     * @param failure the failed operation
+     * @return a controlled application error
+     * @author Nabeel Ali
+     */
+    private MastodonException safeFailure(Throwable failure) {
+        // CompletionStage can wrap the original failure in CompletionException.
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">            if (cause instanceof MastodonException known) {</span>
+<span class="fc" id="L164">                return known;</span>
+            }
+<span class="fc bfc" id="L166" title="All 4 branches covered.">            if (cause instanceof TimeoutException || cause instanceof SocketTimeoutException) {</span>
+<span class="fc" id="L167">                return new MastodonException(504, &quot;Mastodon took too long to respond. Please try again later.&quot;);</span>
+            }
+        }
+<span class="fc" id="L170">        return new MastodonException(503, &quot;Unable to connect to Mastodon. Please try again later.&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

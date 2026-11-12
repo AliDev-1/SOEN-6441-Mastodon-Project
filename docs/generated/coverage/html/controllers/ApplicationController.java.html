@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApplicationController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">controllers</a> &gt; <span class="el_source">ApplicationController.java</span></div><h1>ApplicationController.java</h1><pre class="source lang-java linenums">package controllers;
+
+import jakarta.inject.Inject;
+import services.SearchService;
+import services.ReadabilityService;
+import services.WordStatisticsService;
+import models.Post;
+import models.SearchPage;
+import services.MastodonException;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import play.mvc.Controller;
+import play.mvc.Result;
+
+/**
+ * Handles browser requests and delegates application work to services.
+ *
+ * &lt;p&gt;AI assistance: implementation support for the Phase 2 request for one
+ * asynchronous controller and a tested home page; Phase 6 search and error UI; Phase 7 pagination; Phase 8 cached readability and details; Phase 9 word statistics.&lt;/p&gt;
+ *
+ * @author Nabeel Ali
+ */
+public class ApplicationController extends Controller {
+
+    /** Coordinates validated, cached searches. */
+    private final SearchService searches;
+    /** Calculates local readability estimates from the cached posts. */
+    private final ReadabilityService readability;
+    /** Counts words from the displayed cached page. */
+    private final WordStatisticsService wordStatistics;
+
+    /**
+     * Creates the application controller for Play dependency injection.
+     *
+     * @param searches the asynchronous search service
+     * @param readability the local readability calculator
+     * @param wordStatistics the local word-frequency analyzer
+     * @author Nabeel Ali
+     */
+    @Inject
+<span class="fc" id="L42">    public ApplicationController(SearchService searches, ReadabilityService readability, WordStatisticsService wordStatistics) {</span>
+<span class="fc" id="L43">        this.searches = searches;</span>
+<span class="fc" id="L44">        this.readability = readability;</span>
+<span class="fc" id="L45">        this.wordStatistics = wordStatistics;</span>
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Renders the home page without waiting for external work.
+     *
+     * @return a completed asynchronous response containing the home page
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;Result&gt; index() {
+        // Keep the action asynchronous even though this page needs no API call.
+<span class="fc" id="L56">        return CompletableFuture.completedFuture(ok(views.html.index.render()));</span>
+    }
+
+    /**
+     * Renders the first page of a validated hashtag search.
+     * @param hashtag the submitted search term
+     * @return an asynchronous results or error response
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;Result&gt; search(String hashtag) {
+        // Service validation, caching and HTTP work remain outside the controller.
+<span class="fc" id="L67">        return searches.search(hashtag, null)</span>
+<span class="fc" id="L68">                .thenApply(page -&gt; renderPage(page, 1))</span>
+<span class="fc" id="L69">                .exceptionally(failure -&gt; searchError(hashtag, failure));</span>
+    }
+
+    /**
+     * Displays an exact cached page without issuing a new API request.
+     * @param id the snapshot identifier
+     * @param pageNumber the position in this browsing sequence
+     * @return the cached result page or an expiry error
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;Result&gt; cached(String id, int pageNumber) {
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (invalidPageNumber(pageNumber)) {</span>
+<span class="fc" id="L81">            return CompletableFuture.completedFuture(searchError(&quot;&quot;, new MastodonException(400, &quot;Invalid page number. Please search again.&quot;)));</span>
+        }
+<span class="fc" id="L83">        return searches.cachedPage(id).thenApply(page -&gt; renderPage(page, pageNumber))</span>
+<span class="fc" id="L84">                .exceptionally(failure -&gt; searchError(&quot;&quot;, failure));</span>
+    }
+
+    /**
+     * Loads older results and redirects to their stable cached-page URL.
+     * @param id the source snapshot identifier
+     * @param pageNumber the current position in this browsing sequence
+     * @return a redirect to the older snapshot or a safe error
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;Result&gt; older(String id, int pageNumber) {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (invalidPageNumber(pageNumber)) {</span>
+<span class="fc" id="L96">            return CompletableFuture.completedFuture(searchError(&quot;&quot;, new MastodonException(400, &quot;Invalid page number. Please search again.&quot;)));</span>
+        }
+<span class="fc" id="L98">        return searches.olderPage(id)</span>
+<span class="fc" id="L99">                .thenApply(page -&gt; redirect(routes.ApplicationController.cached(page.getId(), pageNumber + 1)))</span>
+<span class="fc" id="L100">                .exceptionally(failure -&gt; searchError(&quot;&quot;, failure));</span>
+    }
+
+    /**
+     * Renders a post and its readability from an existing snapshot without refetching.
+     * @param id the snapshot identifier
+     * @param postId the opaque post identifier within that snapshot
+     * @param pageNumber the result page position for the return link
+     * @return the post details or a controlled error response
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;Result&gt; details(String id, String postId, int pageNumber) {
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (invalidPageNumber(pageNumber)) {</span>
+<span class="fc" id="L113">            return CompletableFuture.completedFuture(searchError(&quot;&quot;, new MastodonException(400, &quot;Invalid page number. Please search again.&quot;)));</span>
+        }
+<span class="fc" id="L115">        return searches.cachedPage(id).thenApply(page -&gt; {</span>
+            Post post = readability.findPost(page, postId);
+            return ok(views.html.details.render(page, post, readability.analyze(post), pageNumber));
+<span class="fc" id="L118">        }).exceptionally(failure -&gt; searchError(&quot;&quot;, failure));</span>
+    }
+
+    /**
+     * Renders word frequencies for the exact cached page without a new API request.
+     * @param id the snapshot identifier
+     * @param pageNumber the result page position for the return link
+     * @return asynchronous statistics or a controlled expiry/error response
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;Result&gt; words(String id, int pageNumber) {
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (invalidPageNumber(pageNumber)) {</span>
+<span class="fc" id="L130">            return CompletableFuture.completedFuture(searchError(&quot;&quot;, new MastodonException(400, &quot;Invalid page number. Please search again.&quot;)));</span>
+        }
+<span class="fc" id="L132">        return searches.cachedPage(id)</span>
+<span class="fc" id="L133">                .thenApply(page -&gt; ok(views.html.wordStatistics.render(page, wordStatistics.analyze(page), pageNumber)))</span>
+<span class="fc" id="L134">                .exceptionally(failure -&gt; searchError(&quot;&quot;, failure));</span>
+    }
+
+    /**
+     * Renders results with a predecessor link only while that snapshot is cached.
+     * @param page the completed result snapshot
+     * @param pageNumber the position shown in the navigation
+     * @return the successful HTML response
+     * @author Nabeel Ali
+     */
+    private Result renderPage(SearchPage page, int pageNumber) {
+<span class="fc" id="L145">        return ok(views.html.results.render(page, searches.previousPageId(page), pageNumber, readability.analyzePage(page)));</span>
+    }
+
+    /**
+     * Rejects invalid positions and prevents overflow when advancing a page.
+     * @param pageNumber the requested display position
+     * @return whether the page number cannot be used
+     * @author Nabeel Ali
+     */
+    private boolean invalidPageNumber(int pageNumber) {
+<span class="fc bfc" id="L155" title="All 4 branches covered.">        return pageNumber &lt; 1 || pageNumber == Integer.MAX_VALUE;</span>
+    }
+
+    /**
+     * Converts asynchronous failures into safe, useful browser responses.
+     * @param hashtag the original input to preserve in the form
+     * @param failure the failed operation
+     * @return an HTML error response with its appropriate status
+     * @author Nabeel Ali
+     */
+    private Result searchError(String hashtag, Throwable failure) {
+        // Completion stages wrap failures; expose only our controlled messages.
+<span class="fc bfc" id="L167" title="All 4 branches covered.">        while (failure instanceof CompletionException &amp;&amp; failure.getCause() != null) {</span>
+<span class="fc" id="L168">            failure = failure.getCause();</span>
+        }
+<span class="fc bfc" id="L170" title="All 2 branches covered.">        if (failure instanceof MastodonException error) {</span>
+<span class="fc" id="L171">            return status(error.getStatus(), views.html.searchError.render(hashtag, error.getMessage()));</span>
+        }
+<span class="fc" id="L173">        return internalServerError(views.html.searchError.render(hashtag,</span>
+                &quot;Something went wrong while searching. Please try again.&quot;));
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

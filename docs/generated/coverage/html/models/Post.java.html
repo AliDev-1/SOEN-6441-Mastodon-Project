@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Post.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">models</a> &gt; <span class="el_source">Post.java</span></div><h1>Post.java</h1><pre class="source lang-java linenums">package models;
+
+import java.time.Instant;
+import java.util.Objects;
+
+/**
+ * An immutable post independent of its REST or streaming source.
+ *
+ * &lt;p&gt;AI assistance: implementation support for the Phase 3 post model.&lt;/p&gt;
+ *
+ * @author Nabeel Ali
+ */
+public final class Post {
+    /** Stores the opaque post identifier. */
+    private final String id;
+    /** Stores the author display name. */
+    private final String authorName;
+    /** Stores the local or federated account handle. */
+    private final String authorHandle;
+    /** Stores the publication instant. */
+    private final Instant createdAt;
+    /** Stores the language code or Unknown. */
+    private final String language;
+    /** Stores the plain text post content. */
+    private final String content;
+    /** Stores the original HTTP or HTTPS post link. */
+    private final String url;
+    /** Stores the post visibility. */
+    private final String visibility;
+
+    /**
+     * Creates a post from values validated by its data source.
+     *
+     * @param id the opaque post identifier
+     * @param authorName the author display name
+     * @param authorHandle the local or federated account handle
+     * @param createdAt the publication instant
+     * @param language the language code or Unknown
+     * @param content the plain text post content
+     * @param url the original HTTP or HTTPS post link
+     * @param visibility the post visibility
+     * @throws NullPointerException if any value is null
+     * @author Nabeel Ali
+     */
+    public Post(String id, String authorName, String authorHandle, Instant createdAt,
+<span class="fc" id="L46">            String language, String content, String url, String visibility) {</span>
+        // Final fields and immutable values keep cached posts safe to share.
+<span class="fc" id="L48">        this.id = Objects.requireNonNull(id, &quot;id&quot;);</span>
+<span class="fc" id="L49">        this.authorName = Objects.requireNonNull(authorName, &quot;authorName&quot;);</span>
+<span class="fc" id="L50">        this.authorHandle = Objects.requireNonNull(authorHandle, &quot;authorHandle&quot;);</span>
+<span class="fc" id="L51">        this.createdAt = Objects.requireNonNull(createdAt, &quot;createdAt&quot;);</span>
+<span class="fc" id="L52">        this.language = Objects.requireNonNull(language, &quot;language&quot;);</span>
+<span class="fc" id="L53">        this.content = Objects.requireNonNull(content, &quot;content&quot;);</span>
+<span class="fc" id="L54">        this.url = Objects.requireNonNull(url, &quot;url&quot;);</span>
+<span class="fc" id="L55">        this.visibility = Objects.requireNonNull(visibility, &quot;visibility&quot;);</span>
+<span class="fc" id="L56">    }</span>
+
+    /**
+     * Returns the opaque post identifier.
+     * @return the opaque post identifier
+     * @author Nabeel Ali
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Returns the author display name.
+     * @return the author display name
+     * @author Nabeel Ali
+     */
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    /**
+     * Returns the local or federated account handle.
+     * @return the local or federated account handle
+     * @author Nabeel Ali
+     */
+    public String getAuthorHandle() {
+        return authorHandle;
+    }
+
+    /**
+     * Returns the publication instant.
+     * @return the publication instant
+     * @author Nabeel Ali
+     */
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    /**
+     * Returns the language code or Unknown.
+     * @return the language code or Unknown
+     * @author Nabeel Ali
+     */
+    public String getLanguage() {
+        return language;
+    }
+
+    /**
+     * Returns the plain text post content.
+     * @return the plain text post content
+     * @author Nabeel Ali
+     */
+    public String getContent() {
+        return content;
+    }
+
+    /**
+     * Returns the original HTTP or HTTPS post link.
+     * @return the original HTTP or HTTPS post link
+     * @author Nabeel Ali
+     */
+    public String getUrl() {
+        return url;
+    }
+
+    /**
+     * Returns the post visibility.
+     * @return the post visibility
+     * @author Nabeel Ali
+     */
+    public String getVisibility() {
+        return visibility;
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

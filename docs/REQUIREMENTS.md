@@ -17,15 +17,15 @@ choices are distinguished from assignment requirements below.
 - [ ] Java Play application built and run through sbt; dependencies resolved automatically (5.3).
 - [x] Single application controller, with business logic in dedicated classes (5.3).
 - [x] Hashtag input without `#`, using the direct `/api/v1/timelines/tag/{hashtag}` API without a Mastodon wrapper (4.1–4.2).
-- [x] No more than 40 posts requested at a time (4.1); enforced by the Phase 4 client.
+- [x] No more than 40 posts requested at a time (4.1); enforced by the Phase 4 (Mastodon REST client) client.
 - [x] Author, date/time, language, readable content, original link, and visibility displayed (4.2).
-- [x] API pagination for additional results (5.1); Phase 7 routes use the last post ID as `max_id`, with cached navigation.
+- [x] API pagination for additional results (5.1); Phase 7 (Pagination) routes use the last post ID as `max_id`, with cached navigation.
 - [x] Cached data reused between searches and individual analyses (5.3); verified by readability and statistics route tests.
 - [x] Meaningful errors and appropriate status codes for invalid input, API unavailability, HTTP/authentication errors, and malformed data (5.2).
 - [x] Empty successful searches display a clear no-results state (5.2).
 - [x] All controller actions asynchronous; no blocking future waits or sleeps in production code (5.5).
 - [x] No application actors, WebSockets, streaming API, or reactive streams (sections 1 and 7).
-- [x] Domain posts independent of REST transport, allowing future Delivery 2 adaptation (8); implemented in Phase 3.
+- [x] Domain posts independent of REST transport, allowing future Delivery 2 adaptation (8); implemented in Phase 3 (Post model and mapping).
 
 
 ## Readability and word statistics
@@ -45,24 +45,25 @@ the results overview. Both scores appear there and on the details page.
 - [x] Mock the API with Mockito or a factory-generated mock; no live API unit tests (5.6).
 - [x] Document equivalence partitions and assert exact results (5.6).
 - [x] Achieve 100% branch coverage of handwritten production code with JaCoCo (5.6).
-- [x] Verify `sbt run`, `sbt test`, `sbt jacoco`, `sbt javadoc`, and `sbt clean` (5.3); verified for the Phase 2 skeleton and to be rechecked for final submission.
+- [x] Verify `sbt run`, `sbt test`, `sbt jacoco`, `sbt javadoc`, and `sbt clean` (5.3); verified for the Phase 2 (Play foundation) skeleton and to be rechecked for final submission.
 - [x] Javadoc every class, constructor, and method, including private methods and tests (5.4).
 - [x] Include `@author` on all classes and methods (5.4).
 - [x] Disclose GenAI assistance in affected class documentation and retain prompt provenance (5.4).
-- [ ] Include generated HTML Javadoc covering private methods and tests (5.4).
+- [x] Include generated HTML Javadoc covering private methods and tests (5.4); prepared in `docs/generated/javadoc/`.
 - [x] Add concise explanatory comments above logical code blocks (developer preference).
 
+Phase 11 (Documentation and generated reports) documentation artifacts are indexed in [DELIVERY.md](DELIVERY.md).
 Verified implementation/test items above are supported by the
-[Phase 10 verification record](VERIFICATION.md). Final packaging and external
+[Phase 10 (Coverage and full-flow verification) verification record](VERIFICATION.md). Final packaging and external
 submission items remain separate checks.
 
 ## Submission and demonstration
 
 - [ ] Verify team-information submission: repository URL and individual task allocation (6).
 - [ ] Include source, tests, Play configuration, templates/assets, build configuration, and README (9).
-- [ ] README explains installation/run, instance/token configuration, usage, tests, architecture, assumptions, and limitations (9.2).
-- [ ] Include architecture diagram showing browser, controller, service, client, REST API, cache, and analysis components (9.3).
-- [ ] Include short design document covering model, responsibilities, API isolation, Streams, and Delivery 2 evolution (9.4).
+- [x] README explains installation/run, instance/token configuration, usage, tests, architecture, assumptions, and limitations (9.2).
+- [x] Include architecture diagram showing browser, controller, service, client, REST API, cache, and analysis components (9.3).
+- [x] Include short design document covering model, responsibilities, API isolation, Streams, and Delivery 2 evolution (9.4).
 - [ ] Include the genuinely signed official Expectation of Originality form (6).
 
 

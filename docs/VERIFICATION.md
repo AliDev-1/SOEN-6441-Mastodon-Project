@@ -1,7 +1,7 @@
-# Phase 10 verification record
+# Phase 10 — Coverage and full-flow verification
 
-This records verified behavior of the working tree after Phase 9 commit `689e944`.
-Phase 10 adds integration tests and documentation; it does not change production
+This records verified behavior of the working tree after Phase 9 (Word statistics) commit `689e944`.
+Phase 10 (Coverage and full-flow verification) adds integration tests and documentation; it does not change production
 behavior. No commit or push was performed by the assistant.
 
 ## Executed checks
@@ -23,7 +23,8 @@ sbt -batch test jacoco javadoc
 - `git diff --check` passed.
 
 Reports are generated under `target/scala-2.13/jacoco/report/` and
-`target/site/javadoc/`. They are build artifacts, not yet copied into the submission.
+`target/site/javadoc/`. Phase 11 (Documentation and generated reports) adds delivery copies under `docs/generated/`; see
+[GENERATED_REPORTS.md](GENERATED_REPORTS.md) for regeneration and inspection.
 
 ## Full-flow integration evidence
 
@@ -60,13 +61,21 @@ ordering, and escaping. See [the testing strategy](TESTING.md) for the partition
 - `.env` is ignored, and neither `.env` nor `conf/application.local.conf` appears
   in the available Git history. No local credential contents were opened or printed.
   This is a filename/history check, not a comprehensive secret-scanning guarantee.
-- Repository docs retain the assistance record and contain no deadline references.
+- Repository docs retain the assistance record.
 
 ## Remaining delivery checks
 
 Browser visual inspection, final clean-checkout run, dependency resolution in that
-checkout, submission archive inspection, diagram/report packaging, and the signed
-originality form remain for Phases 11–12. Account ownership, external team-information
+checkout, submission archive inspection, and the signed originality form remain
+for Phase 12 (Final delivery checks). The diagram and report copies are prepared in Phase 11 (Documentation and generated reports). Account ownership, external team-information
 submission, and signature authenticity cannot be established by these automated
 tests. This verification used no live Mastodon API requests and did not restart or
 stop the developer's running server.
+
+## Phase 11 — Documentation and generated reports: report refresh
+
+Re-ran `sbt -batch jacoco javadoc` against the Phase 10 (Coverage and full-flow verification) Java sources. All 88 tests
+passed with the same full coverage counters. Copied 66 Javadoc files and 57 coverage
+report files into `docs/generated/`, verified every copied file against its source,
+and checked local report/documentation file links. No missing targets were found.
+The Java implementation and tests were not changed in Phase 11 (Documentation and generated reports).

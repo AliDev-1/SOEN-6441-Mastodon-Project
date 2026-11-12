@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WordStatisticsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">services</a> &gt; <span class="el_source">WordStatisticsService.java</span></div><h1>WordStatisticsService.java</h1><pre class="source lang-java linenums">package services;
+
+import java.text.Normalizer;
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.function.Function;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import models.Post;
+import models.SearchPage;
+import models.WordFrequency;
+import models.WordStatistics;
+
+/**
+ * Uses Java Streams to count normalized words from the displayed cached page.
+ * &lt;p&gt;AI assistance: implementation support for Phase 9 tokenization and aggregation.&lt;/p&gt;
+ * @author Nabeel Ali
+ */
+public final class WordStatisticsService {
+    /** Unicode letter words with combining marks and optional internal apostrophes. */
+<span class="fc" id="L23">    private static final Pattern WORD = Pattern.compile(&quot;\\p{L}[\\p{L}\\p{M}]*(?:'\\p{L}[\\p{L}\\p{M}]*)*&quot;);</span>
+    /** Excludes complete HTTP(S) and www URLs before extracting words. */
+<span class="fc" id="L25">    private static final Pattern URL = Pattern.compile(&quot;(?i)https?://\\S+|www\\.\\S+&quot;);</span>
+
+    /** Creates the stateless analyzer.
+     * @author Nabeel Ali
+     */
+<span class="fc" id="L30">    public WordStatisticsService() { }</span>
+
+    /**
+     * Counts all words across this page only, retaining stop words and all languages.
+     * @param page the cached snapshot being viewed
+     * @return frequencies sorted by descending count, then natural word order
+     * @author Nabeel Ali
+     */
+    public WordStatistics analyze(SearchPage page) {
+        // Flatten each post's words, then group identical normalized spellings.
+<span class="fc" id="L40">        var counts = page.getPosts().stream()</span>
+<span class="fc" id="L41">                .map(Post::getContent)</span>
+<span class="fc" id="L42">                .flatMap(this::words)</span>
+<span class="fc" id="L43">                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));</span>
+
+        // Explicit tie-breaking makes equal-frequency results deterministic.
+<span class="fc" id="L46">        var frequencies = counts.entrySet().stream()</span>
+<span class="fc" id="L47">                .map(entry -&gt; new WordFrequency(entry.getKey(), entry.getValue()))</span>
+<span class="fc" id="L48">                .sorted(Comparator.comparingLong(WordFrequency::getCount).reversed()</span>
+<span class="fc" id="L49">                        .thenComparing(WordFrequency::getWord))</span>
+<span class="fc" id="L50">                .toList();</span>
+<span class="fc" id="L51">        return new WordStatistics(frequencies);</span>
+    }
+
+    /**
+     * Normalizes case and Unicode while excluding URL text and nonword characters.
+     * @param text the already-readable post content
+     * @return a stream of normalized words
+     * @author Nabeel Ali
+     */
+    private Stream&lt;String&gt; words(String text) {
+        // Normalize curly apostrophes together; retain accents as part of each word.
+<span class="fc" id="L62">        String cleaned = URL.matcher(text).replaceAll(&quot; &quot;).replace('’', '\'');</span>
+<span class="fc" id="L63">        String normalized = Normalizer.normalize(cleaned.toLowerCase(Locale.ROOT), Normalizer.Form.NFC);</span>
+<span class="fc" id="L64">        return WORD.matcher(normalized).results().map(MatchResult::group);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

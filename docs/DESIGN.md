@@ -2,7 +2,8 @@
 
 MAWA separates browser actions, data retrieval, and post analysis. The current
 implementation includes post representation, JSON conversion, and an asynchronous
-REST client, input validation, a shared cache, and the first-page search interface.
+REST client, input validation, a shared cache, numbered pagination, readability, and word statistics.
+See [the architecture overview](ARCHITECTURE.md) for the diagram and responsibilities.
 
 ## Domain model
 
@@ -20,7 +21,7 @@ No actors or reactive streams are implemented in Delivery 1.
 `MastodonPostMapper.parse(String)` accepts a complete JSON timeline array and
 returns an unmodifiable `List<Post>` in the API's order. Empty arrays are valid.
 Malformed JSON, trailing JSON values, non-array bodies, and invalid entries throw
-`IllegalArgumentException`; the future client/service will translate this into a
+`IllegalArgumentException`; the client translates this into a
 controlled application error. One bad entry rejects the response instead of
 silently presenting incomplete analysis.
 
@@ -41,8 +42,8 @@ The selected fields and nullable URL/language behavior follow the official
 
 The mapper handles top-level status content only. Attachments, custom emoji images,
 nested boosts, and quoted-post expansion are outside the current display model.
-It does not fetch URLs or impose a timeline request size; the REST client will
-request at most 40 posts per page.
+It does not fetch URLs or impose a timeline request size; the REST client
+requests at most 40 posts per page.
 
 ## Readable text
 
@@ -51,7 +52,7 @@ style elements, decodes character entities, and normalizes block boundaries and
 whitespace into spaces. Unicode text and ordinary emoji are preserved. Image-only
 content has no text; a null fragment returns an empty string.
 
-Plain text is not trusted HTML: future Twirl templates must escape it normally.
+Plain text is not trusted HTML: Twirl templates escape it normally.
 For example, encoded angle brackets become literal text and must not be inserted
 through Twirl's raw-HTML helpers. The converter follows jsoup's
 [text extraction API](https://jsoup.org/apidocs/org/jsoup/nodes/Element.html#text()).
@@ -63,7 +64,7 @@ through Twirl's raw-HTML helpers. The converter follows jsoup's
 and mapper into a singleton. The client sends one GET to
 `/api/v1/timelines/tag/{encodedHashtag}` with `limit=40` and an optional `max_id`.
 It makes no blocking waits or automatic retries. Cursor navigation and caching
-remain responsibilities of later phases. The endpoint and cursor behavior follow
+are handled by `SearchService`. The endpoint and cursor behavior follow
 the [official timeline API](https://docs.joinmastodon.org/methods/timelines/).
 
 The request uses an Authorization Bearer header, an Accept JSON header, and a
@@ -73,13 +74,13 @@ credentials, an API path, query, or fragment. Configuration is captured when the
 client is created; changes require restarting the application.
 
 Null or blank hashtags produce a failed stage with status 400. Full input rules
-will be enforced by the search service. Nonempty tags are encoded as one path
+are enforced by the search service. Nonempty tags are encoded as one path
 segment; cursors are passed separately through the HTTP client's query API.
 
 HTTP 200 responses are mapped through `MastodonPostMapper`. Empty arrays are valid;
 malformed responses and responses exceeding 40 posts are rejected. Error response
 bodies are not read. `MastodonException` carries controlled messages without raw
-exceptions, response bodies, or credentials. Future controller actions will use
+exceptions, response bodies, or credentials. Controller actions use
 its status code to render an appropriate error page.
 
 | Condition | Application status |
@@ -277,6 +278,8 @@ fetching every matching post is neither necessary nor performed.
 
 ## Remaining delivery work
 
-Phases 10–12 complete the final verification, architecture diagram, documentation
-artifacts, packaging, and submission/demo checklist. Feature-level tests do not
-by themselves establish completion of those external deliverables.
+Phase 10 (Coverage and full-flow verification) verification is recorded in [VERIFICATION.md](VERIFICATION.md), and
+Phase 11 (Documentation and generated reports) provides the diagram and generated reports. Phase 12 (Final delivery checks) still needs the
+clean-checkout run, package inspection, and external submission/demo checks in
+[DELIVERY.md](DELIVERY.md). Automated tests do not establish completion of those
+external deliverables.

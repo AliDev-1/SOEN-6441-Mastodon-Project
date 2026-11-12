@@ -4,7 +4,12 @@ Run `sbt test` for JUnit tests and `sbt jacoco` for tests with coverage. The tes
 use an isolated Play application and never contact the live Mastodon API.
 Mockito isolates the client and search service from the network.
 
-## Phase 2 cases
+The phase sections below record checks as features were added. Their historical
+counts and limitations refer to that phase; the latest full-suite result is in
+[VERIFICATION.md](VERIFICATION.md). Delivery report copies are linked in
+[GENERATED_REPORTS.md](GENERATED_REPORTS.md).
+
+## Phase 2 — Play foundation: test cases
 
 | Case | Input or partition | Expected result | Test |
 | --- | --- | --- | --- |
@@ -13,11 +18,11 @@ Mockito isolates the client and search service from the network.
 | Stylesheet | Asset URL extracted from the home page | Status 200, CSS content type, expected font rule | `homeStylesheetIsServed` |
 
 The home action has one input partition because it accepts no parameters and has
-no conditional branches. Hashtag, API response, cache, and analysis partitions will
-be added alongside those features. Tests assert specified values, not just nonempty
+no conditional branches. Hashtag, API response, cache, and analysis partitions were
+added in the subsequent phases below. Tests assert specified values, not just nonempty
 responses. Future waits are confined to test code.
 
-## Phase 3 cases
+## Phase 3 — Post model and mapping: test cases
 
 | Input partition | Expected result | Test coverage |
 | --- | --- | --- |
@@ -37,10 +42,10 @@ responses. Future waits are confined to test code.
 
 Related partitions are grouped in tests, but invalid fields are changed separately
 so one error does not mask another. All JSON is synthetic; no credentials or live
-responses are used. Phase 3 verification passed 28 tests and achieved 100% line,
+responses are used. Phase 3 (Post model and mapping) verification passed 28 tests and achieved 100% line,
 method, and branch coverage of the current handwritten production code.
 
-## Phase 4 cases
+## Phase 4 — Mastodon REST client: test cases
 
 `MastodonClientTest` mocks Play's `WSClient`, `WSRequest`, and `WSResponse` using
 Mockito. It uses dummy credentials and manually completed futures. Its dependency
@@ -63,7 +68,7 @@ or calls Mastodon.
 | Guice-created client | Correct injection and singleton instance | `supportsDependencyInjection` |
 
 `MastodonExceptionTest` separately checks the error status, message, and absent
-cause. Phase 4 passed 42 tests with 100% line, method, and branch coverage of the
+cause. Phase 4 (Mastodon REST client) passed 42 tests with 100% line, method, and branch coverage of the
 current handwritten production code.
 
 A separate, temporary manual runner exercised the actual client using local
@@ -71,7 +76,7 @@ configuration and successfully mapped 40 `java` posts. It printed only the count
 closed its application, and was removed afterward. Live verification is separate
 from the reproducible automated test suite.
 
-## Phase 5 cases
+## Phase 5 — Validation and cache: test cases
 
 | Partition | Expected behavior |
 | --- | --- |
@@ -93,11 +98,10 @@ from the reproducible automated test suite.
 sleep. Its concurrency test releases eight workers together and waits only in test
 code with timeouts. `SearchPageTest` verifies exact getters, defensive copying,
 unmodifiable results, and null rejection. No test reads credentials or calls the
-live API. Phase 5 passed 51 tests with 100% line, method, and branch coverage
-across all nine handwritten production classes; Javadoc also passed. Actual browser
-search and analysis integration remain for later phases.
+live API. Phase 5 (Validation and cache) passed 51 tests with 100% line, method, and branch coverage
+across all nine handwritten production classes; Javadoc also passed. Browser search and analysis integration was subsequently verified in Phases 6–10 (search interface, pagination, readability, word statistics, and full-flow verification).
 
-## Phase 6 cases
+## Phase 6 — Search interface: test cases
 
 `ApplicationControllerTest` checks the updated home form, route, and stylesheet.
 `SearchControllerTest` replaces the service with a mock to inspect response HTML
@@ -115,15 +119,15 @@ Mastodon client to verify validation and repeated-search cache reuse.
 | Real validator with leading hash | 400 without any client call |
 | Repeated case-equivalent browser searches | Identical snapshot HTML and one client call |
 
-Phase 6 verification passed 57 tests, 100% line/method/branch coverage of handwritten
+Phase 6 (Search interface) verification passed 57 tests, 100% line/method/branch coverage of handwritten
 production code, and Javadoc generation.
 
 Live browser visual inspection remains pending because the browser host was
 unavailable. The existing localhost server returned a missing-dependency compile
-error; a restart is needed to pick up Phase 5's build changes. Tests use newly
+error; a restart is needed to pick up the build changes from Phase 5 (Validation and cache). Tests use newly
 constructed applications with the current dependencies and no live Mastodon calls.
 
-## Phase 7 cases
+## Phase 7 — Pagination: test cases
 
 | Partition | Expected result |
 | --- | --- |
@@ -139,14 +143,14 @@ constructed applications with the current dependencies and no live Mastodon call
 
 `SearchPageTest` covers cursor boundaries. `SearchServiceTest` uses its fake clock
 for expiry and verifies exact calls. `SearchControllerTest` follows rendered links
-through real routing and caching with a mocked Mastodon client. Phase 7, including navigation refinements, passed 64
+through real routing and caching with a mocked Mastodon client. Phase 7 (Pagination), including navigation refinements, passed 64
 tests, 100% line/method/branch coverage of handwritten production code, and Javadoc.
 Numbered-navigation tests verify the top and bottom page indicators, position
 preservation in previous/next/saved links, disabled unavailable actions, explanatory
 labels, and rejection of invalid numbers before service access.
 No live API requests or browser visual verification were performed in this phase.
 
-## Phase 8 cases
+## Phase 8 — Readability and post details: test cases
 
 | Partition | Expected result |
 | --- | --- |
@@ -166,11 +170,11 @@ No live API requests or browser visual verification were performed in this phase
 `ReadabilityServiceTest` asserts independently hand-counted examples rather than
 reimplementing the algorithm in its assertions. `ReadabilityTest` checks exposed
 values. Controller integration tests exercise the actual service and templates
-with a mocked Mastodon boundary. Phase 8 passed 75 tests with 100% line, method,
+with a mocked Mastodon boundary. Phase 8 (Readability and post details) passed 75 tests with 100% line, method,
 and branch coverage across eleven handwritten production classes. Javadoc passed.
 No live API or browser visual verification was performed in this phase.
 
-## Phase 9 cases
+## Phase 9 — Word statistics: test cases
 
 | Partition | Expected result |
 | --- | --- |
@@ -186,11 +190,11 @@ No live API or browser visual verification was performed in this phase.
 
 `WordStatisticsServiceTest` uses synthetic content and exact ordered expected pairs.
 `WordStatisticsTest` verifies both immutable model classes. Controller integration
-tests exercise the real analyzer and cache with a mocked client. Phase 9 passed
+tests exercise the real analyzer and cache with a mocked client. Phase 9 (Word statistics) passed
 84 tests with 100% line/method/branch coverage across fourteen handwritten production
 classes; Javadoc also passed. No live API or browser visual verification occurred.
 
-## Phase 10 full-flow verification
+## Phase 10 — Coverage and full-flow verification
 
 `ApplicationFlowTest` mocks only Play WS and supplies synthetic JSON. It verifies
 that real mapping, caching, analysis, routing and rendering work together. Its
@@ -198,7 +202,7 @@ four tests cover a 40-post first page and an older page, both analyses and retur
 navigation, upstream/malformed/oversized responses and retry, pending-request
 sharing, and fake-clock expiry of every cached route without silent refetching.
 
-Phase 10 passed 88 tests. Coverage remains 100%: 286 lines, 146 branches, and
+Phase 10 (Coverage and full-flow verification) passed 88 tests. Coverage remains 100%: 286 lines, 146 branches, and
 55 methods across fourteen handwritten production classes. Strict Javadoc passed,
 and all 187 generated method/constructor sections have rendered author entries.
 See [the verification record](VERIFICATION.md) for exact assertions and limits.

@@ -1,6 +1,6 @@
 # Development setup
 
-These instructions prepare the environment and run the MAWA Play skeleton.
+These instructions prepare the environment and run the complete MAWA application.
 
 ## Java and sbt
 
@@ -9,7 +9,7 @@ Use JDK 21 and sbt. Play lists Java 21 among its supported LTS versions in its
 Install JDK 21 from [Eclipse Temurin](https://adoptium.net/temurin/releases/?version=21)
 if necessary. Install sbt using its [official instructions](https://www.scala-sbt.org/download/).
 
-JDK 21 was installed through Homebrew during Phase 2. On this Apple Silicon Mac,
+JDK 21 was installed through Homebrew during Phase 2 (Play foundation). On this Apple Silicon Mac,
 select it for the current terminal without changing the system-wide Java default:
 
 ```sh
@@ -29,7 +29,7 @@ command -v sbt
 
 Do not run the selection command until JDK 21 is installed. The build pins Play
 3.0.12, sbt 1.13.0, Scala 2.13.18 (for Play templates), sbt-jacoco 3.7.0, JUnit
-4.13.2, Mockito 5.24.0, and jsoup 1.21.2. Application logic is written in Java.
+4.13.2, Mockito 5.24.0, jsoup 1.21.2, and Caffeine 3.2.3. Application logic is written in Java.
 
 ## Run and verify
 
@@ -43,15 +43,25 @@ Visit <http://localhost:9000> to view the home page. Ctrl+C stops the server.
 No Mastodon credentials are required for the home page. The initial dependency
 download requires internet access; sbt resolves the pinned libraries automatically.
 
-Run the complete build checks separately from the development server:
+Run checks in a second terminal from the repository root. The tests use synthetic
+responses and do not require a Mastodon token:
 
 ```sh
-sbt clean test jacoco javadoc
+sbt jacoco javadoc
 ```
 
 Coverage is generated under `target/scala-2.13/jacoco/report/`; Javadoc is generated
-under `target/site/javadoc/`. These build outputs are ignored by Git. Final
-submission documentation will be copied to its delivery location in Phase 11.
+under `target/site/javadoc/`. These build outputs are ignored by Git. Delivery copies
+are in `docs/generated/`; see [report instructions](GENERATED_REPORTS.md).
+
+`sbt test` checks behavior. `sbt jacoco` runs those same tests with coverage tracking;
+`sbt javadoc` generates API documentation without running tests. Running `sbt test
+jacoco javadoc` runs the tests twice. Expect 88 passing tests and 100% handwritten
+line/method/branch coverage. Some failure tests deliberately emit exception logs;
+check the final summary for failures. Mockito may emit a Java-agent warning on JDK 21.
+
+`sbt clean` deletes `target/` outputs, but not `docs/generated/`. Stop the development
+server before a clean rebuild, then use `sbt clean jacoco javadoc` if needed.
 
 ## Git identity and review
 
@@ -68,9 +78,7 @@ git diff
 ```
 
 Review new files as well: `git diff` does not show untracked file contents.
-Commit and push manually after each phase. Public remote readability does not
-establish permission to push; authenticate through your normal GitHub workflow
-when making the first push.
+Commit and push manually after each phase through your normal GitHub workflow.
 
 ## Dedicated Mastodon account
 
@@ -85,7 +93,7 @@ when making the first push.
 
 Menu names can differ between instances. Mastodon's
 [client access documentation](https://docs.joinmastodon.org/client/token/)
-describes application registration and token types. During Phase 4, the configured
+describes application registration and token types. During Phase 4 (Mastodon REST client), the configured
 client successfully retrieved 40 hashtag posts in a separate live smoke check.
 
 ## Local configuration
@@ -126,9 +134,20 @@ changing `.env`, loading the file in the terminal that starts sbt. The instance
 must be an HTTPS origin such as `https://mastodon.social`, optionally with a
 trailing slash, and without credentials, an API path, query, or fragment.
 
-The current home page does not initiate requests. Once the search UI is added,
-verify a hashtag search through the running app. Automated tests use mocks and
-must not contact Mastodon.
+The home page does not initiate requests. Search for `java` to make a live request,
+then try older results, post details, and the linked hashtag statistics. Automated
+tests use mocks and do not contact Mastodon.
+
+## Troubleshooting
+
+- Missing Caffeine/dependency errors after updates: stop the old server and start a
+  fresh `sbt run` so it reloads `build.sbt`.
+- Configuration error: load `.env` in the same terminal before starting sbt.
+- Authentication error: verify the user access token and `read:statuses` scope locally.
+- Port 9000 already in use: use the existing server terminal or stop it before starting
+  another instance. Do not run two development servers for this checkout.
+- Saved link returns 410: its in-memory snapshot expired or was evicted; search again.
+- Reports are missing: regenerate with `sbt jacoco javadoc`; `clean` removes build outputs.
 
 ## Before submission
 

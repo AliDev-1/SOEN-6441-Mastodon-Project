@@ -1,15 +1,15 @@
 # MAWA Mastodon Analysis Web App
 
-SOEN 6441 Advanced Programming Practices, Delivery 1. MAWA will retrieve
-Mastodon hashtag posts and display them with readability scores and word statistics.
+SOEN 6441 Advanced Programming Practices, Delivery 1. MAWA retrieves
+Mastodon hashtag posts and displays them with readability scores and word statistics.
 
 ## Current status
 
 Search, numbered pagination, readability, post details, and word statistics are
-implemented. Phase 10 verification passed 88 tests with 100% line, method, and
+implemented. Phase 10 (Coverage and full-flow verification) verification passed 88 tests with 100% line, method, and
 branch coverage of handwritten production code. Full-flow tests mock only the
-outbound HTTP boundary. Final documentation and submission checks remain in
-Phases 11–12; see the [verification record](docs/VERIFICATION.md).
+outbound HTTP boundary. Phase 11 (Documentation and generated reports) supplies final documentation and generated reports; submission checks
+remain in Phase 12 (Final delivery checks); see the [verification record](docs/VERIFICATION.md).
 
 ## Run locally
 
@@ -59,7 +59,7 @@ See [testing notes](docs/TESTING.md) for the current test cases and coverage rul
 8. Correct invalid input or retry after an API error. Repeated normalized searches
    reuse cached results for ten minutes, subject to the 100-page retention limit.
 
-After dependency changes (including Phase 5's Caffeine addition), stop the existing
+After dependency changes (including the Caffeine addition in Phase 5 (Validation and cache)), stop the existing
 server with Ctrl+C and start a fresh `sbt run`; source reload alone may retain the
 old build dependencies.
 
@@ -88,6 +88,24 @@ segmented words. See the design notes for the complete policy and examples.
 The application uses Java 21, Play Java, sbt, and server-rendered pages. Controller
 actions and HTTP calls are asynchronous. Search and analysis reuse cached posts.
 
+## Architecture and project layout
+
+The single application controller delegates to a cached search service and local
+analysis services. Play WS retrieves JSON asynchronously; the mapper creates
+immutable posts. Twirl renders escaped HTML. Readability and word statistics read
+the same saved page, without another Mastodon request. See the
+[architecture diagram](docs/ARCHITECTURE.md) and [design](docs/DESIGN.md).
+
+| Directory | Contents |
+| --- | --- |
+| `app/controllers`, `app/services`, `app/models` | Java application logic and domain values |
+| `app/views`, `public` | Twirl templates and CSS |
+| `conf`, `project`, `build.sbt` | Routes, configuration, and pinned build |
+| `test` | JUnit and Mockito tests |
+| `docs` | Design, verification, disclosures, and delivery instructions |
+| `docs/generated` | Prepared Javadoc and coverage reports |
+| `target` | Disposable build outputs, excluded from Git |
+
 ## Documentation
 
 - [Setup instructions](docs/SETUP.md)
@@ -95,6 +113,11 @@ actions and HTTP calls are asynchronous. Search and analysis reuse cached posts.
 - [Implementation phases](docs/PROGRESS.md)
 - [Design and data mapping](docs/DESIGN.md)
 - [AI assistance disclosure](docs/AI_USAGE.md)
+- [Architecture diagram](docs/ARCHITECTURE.md)
+- [Testing strategy](docs/TESTING.md)
+- [Verification record](docs/VERIFICATION.md)
+- [Generated reports](docs/GENERATED_REPORTS.md)
+- [Delivery and demonstration checklist](docs/DELIVERY.md)
 
 ## Development workflow
 

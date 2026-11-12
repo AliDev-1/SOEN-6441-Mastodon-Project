@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchPage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">models</a> &gt; <span class="el_source">SearchPage.java</span></div><h1>SearchPage.java</h1><pre class="source lang-java linenums">package models;
+
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * An immutable snapshot shared by result display and later analyses.
+ * &lt;p&gt;AI assistance: implementation support for Phase 5 cached page values and Phase 7 pagination.&lt;/p&gt;
+ * @author Nabeel Ali
+ */
+public final class SearchPage {
+    /** Identifies this particular response, even after the same query is refreshed. */
+    private final String id;
+    /** Stores the normalized search term. */
+    private final String hashtag;
+    /** Stores the requested cursor; empty means the first page. */
+    private final String cursor;
+    /** Stores the posts in API order. */
+    private final List&lt;Post&gt; posts;
+
+    /**
+     * Creates a snapshot with a defensive copy of the posts.
+     * @param id the unique snapshot identifier
+     * @param hashtag the normalized term
+     * @param cursor the requested cursor
+     * @param posts the retrieved posts
+     * @author Nabeel Ali
+     */
+<span class="fc" id="L29">    public SearchPage(String id, String hashtag, String cursor, List&lt;Post&gt; posts) {</span>
+        // Immutable values prevent callers from changing a shared result.
+<span class="fc" id="L31">        this.id = Objects.requireNonNull(id, &quot;id&quot;);</span>
+<span class="fc" id="L32">        this.hashtag = Objects.requireNonNull(hashtag, &quot;hashtag&quot;);</span>
+<span class="fc" id="L33">        this.cursor = Objects.requireNonNull(cursor, &quot;cursor&quot;);</span>
+<span class="fc" id="L34">        this.posts = List.copyOf(posts);</span>
+<span class="fc" id="L35">    }</span>
+
+    /** Returns the snapshot identifier.
+     * @return the snapshot identifier
+     * @author Nabeel Ali
+     */
+    public String getId() { return id; }
+
+    /** Returns the normalized hashtag.
+     * @return the normalized hashtag
+     * @author Nabeel Ali
+     */
+    public String getHashtag() { return hashtag; }
+
+    /** Returns the requested cursor.
+     * @return the requested cursor
+     * @author Nabeel Ali
+     */
+    public String getCursor() { return cursor; }
+
+    /** Returns the cached posts.
+     * @return the unmodifiable posts in API order
+     * @author Nabeel Ali
+     */
+    public List&lt;Post&gt; getPosts() { return posts; }
+    /**
+     * Returns the last post ID as the older-page cursor, unless no progress is possible.
+     * @return an opaque cursor, or an empty string when navigation should stop
+     * @author Nabeel Ali
+     */
+    public String getNextCursor() {
+        // Never infer exhaustion from a short page or convert opaque IDs to numbers.
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (posts.isEmpty()) {</span>
+<span class="fc" id="L68">            return &quot;&quot;;</span>
+        }
+<span class="fc" id="L70">        String next = posts.getLast().getId();</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        return next.equals(cursor) ? &quot;&quot; : next;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

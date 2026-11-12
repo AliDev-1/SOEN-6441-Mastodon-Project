@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchInput.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">services</a> &gt; <span class="el_source">SearchInput.java</span></div><h1>SearchInput.java</h1><pre class="source lang-java linenums">package services;
+
+import java.text.Normalizer;
+import java.util.Locale;
+
+/**
+ * Validates and normalizes browser search parameters before any API request.
+ * &lt;p&gt;AI assistance: implementation support for Phase 5 input validation.&lt;/p&gt;
+ * @author Nabeel Ali
+ */
+public final class SearchInput {
+    /** Creates the stateless validator.
+     * @author Nabeel Ali
+     */
+<span class="fc" id="L15">    public SearchInput() { }</span>
+
+    /**
+     * Normalizes a hashtag without a leading hash character.
+     * @param input the browser value
+     * @return the normalized hashtag
+     * @throws MastodonException for invalid input
+     * @author Nabeel Ali
+     */
+    public String hashtag(String input) {
+        // Normalize equivalent Unicode spellings and case for shared cache keys.
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        String tag = Normalizer.normalize(input == null ? &quot;&quot; : input.strip(),</span>
+<span class="fc" id="L27">                Normalizer.Form.NFC).toLowerCase(Locale.ROOT);</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (!tag.matches(&quot;[\\p{L}\\p{M}\\p{N}_]{1,100}&quot;)</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">                || !tag.matches(&quot;.*\\p{L}.*&quot;)) {</span>
+<span class="fc" id="L30">            throw new MastodonException(400,</span>
+                    &quot;Enter a hashtag without #, using 1–100 letters, numbers, or underscores and at least one letter.&quot;);
+        }
+<span class="fc" id="L33">        return tag;</span>
+    }
+
+    /**
+     * Validates an opaque pagination cursor without converting it to a number.
+     * @param input the optional browser value
+     * @return a trimmed cursor, or an empty string for the first page
+     * @throws MastodonException for invalid input
+     * @author Nabeel Ali
+     */
+    public String cursor(String input) {
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        String cursor = input == null ? &quot;&quot; : input.strip();</span>
+        // Permit opaque punctuation but reject separators, control characters and huge values.
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (!cursor.matches(&quot;[^\\p{Z}\\p{C}\\s]{0,256}&quot;)) {</span>
+<span class="fc" id="L47">            throw new MastodonException(400, &quot;Invalid pagination cursor. Please search again.&quot;);</span>
+        }
+<span class="fc" id="L49">        return cursor;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

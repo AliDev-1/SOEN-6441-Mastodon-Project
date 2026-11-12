@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HtmlText.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">services</a> &gt; <span class="el_source">HtmlText.java</span></div><h1>HtmlText.java</h1><pre class="source lang-java linenums">package services;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+/**
+ * Converts post HTML into normalized readable text without fetching resources.
+ *
+ * &lt;p&gt;AI assistance: implementation support for Phase 3 HTML conversion.&lt;/p&gt;
+ *
+ * @author Nabeel Ali
+ */
+public final class HtmlText {
+    /**
+     * Creates a stateless text converter.
+     * @author Nabeel Ali
+     */
+<span class="fc" id="L18">    public HtmlText() {</span>
+        // All parsing state belongs to an individual conversion.
+<span class="fc" id="L20">    }</span>
+
+    /**
+     * Removes markup and executable content, decodes entities, and separates blocks.
+     * The returned text must still be escaped when inserted into an HTML page.
+     *
+     * @param html the content fragment, or null when no text is available
+     * @return normalized plain text, or an empty string for null content
+     * @author Nabeel Ali
+     */
+    public String toPlainText(String html) {
+        // Handle absent content independently from API field validation.
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        if (html == null) {</span>
+<span class="fc" id="L33">            return &quot;&quot;;</span>
+        }
+        // Parse locally; scripts and styles contribute no readable post text.
+<span class="fc" id="L36">        Document document = Jsoup.parseBodyFragment(html);</span>
+<span class="fc" id="L37">        document.select(&quot;script, style&quot;).remove();</span>
+<span class="fc" id="L38">        return document.body().text();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

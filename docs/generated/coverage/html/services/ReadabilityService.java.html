@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReadabilityService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">services</a> &gt; <span class="el_source">ReadabilityService.java</span></div><h1>ReadabilityService.java</h1><pre class="source lang-java linenums">package services;
+
+import java.text.Normalizer;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import models.Post;
+import models.Readability;
+import models.SearchPage;
+
+/**
+ * Estimates English readability from cached plain text without any external calls.
+ * &lt;p&gt;AI assistance: implementation support for Phase 8 formulas and text heuristics.&lt;/p&gt;
+ * @author Nabeel Ali
+ */
+public final class ReadabilityService {
+    /** Counts letter sequences while preserving internal apostrophes. */
+<span class="fc" id="L20">    private static final Pattern WORD = Pattern.compile(&quot;\\p{L}+(?:['’]\\p{L}+)*&quot;);</span>
+    /** Approximates syllables by groups of English vowels, including y. */
+<span class="fc" id="L22">    private static final Pattern VOWELS = Pattern.compile(&quot;[aeiouy]+&quot;);</span>
+
+    /** Creates the stateless calculator.
+     * @author Nabeel Ali
+     */
+<span class="fc" id="L27">    public ReadabilityService() { }</span>
+
+    /**
+     * Calculates scores for each cached result without changing its posts.
+     * @param page the displayed snapshot
+     * @return scores indexed by opaque post ID
+     * @author Nabeel Ali
+     */
+    public Map&lt;String, Readability&gt; analyzePage(SearchPage page) {
+<span class="fc" id="L36">        Map&lt;String, Readability&gt; scores = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        for (Post post : page.getPosts()) {</span>
+<span class="fc" id="L38">            scores.put(post.getId(), analyze(post));</span>
+<span class="fc" id="L39">        }</span>
+<span class="fc" id="L40">        return Map.copyOf(scores);</span>
+    }
+
+    /**
+     * Finds a post only within the requested cached snapshot.
+     * @param page the retained page
+     * @param postId the requested opaque post ID
+     * @return the matching cached post
+     * @throws MastodonException when the post is not in this page
+     * @author Nabeel Ali
+     */
+    public Post findPost(SearchPage page, String postId) {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        for (Post post : page.getPosts()) {</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            if (post.getId().equals(postId)) {</span>
+<span class="fc" id="L54">                return post;</span>
+            }
+<span class="fc" id="L56">        }</span>
+<span class="fc" id="L57">        throw new MastodonException(404, &quot;This post is not part of the saved results. Please return to your search.&quot;);</span>
+    }
+
+    /**
+     * Calculates Flesch scores using documented word, sentence and syllable heuristics.
+     * @param post the plain-text post and its declared language
+     * @return scores and counts, or an explanation of unavailability
+     * @author Nabeel Ali
+     */
+    public Readability analyze(Post post) {
+<span class="fc" id="L67">        String language = post.getLanguage().toLowerCase(Locale.ROOT);</span>
+<span class="fc" id="L68">        boolean unknown = language.equals(&quot;unknown&quot;);</span>
+<span class="fc bfc" id="L69" title="All 6 branches covered.">        if (!unknown &amp;&amp; !language.equals(&quot;en&quot;) &amp;&amp; !language.startsWith(&quot;en-&quot;)) {</span>
+<span class="fc" id="L70">            return unavailable(&quot;Readability unavailable: these formulas estimate English text only.&quot;);</span>
+        }
+
+        // Exclude URLs before splitting punctuation; keep words from the actual post.
+<span class="fc" id="L74">        String text = post.getContent().replaceAll(&quot;(?i)https?://\\S+|www\\.\\S+&quot;, &quot; &quot;);</span>
+<span class="fc" id="L75">        int words = 0;</span>
+<span class="fc" id="L76">        int sentences = 0;</span>
+<span class="fc" id="L77">        int syllables = 0;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (String sentence : text.split(&quot;[.!?]+&quot;)) {</span>
+<span class="fc" id="L79">            Matcher matcher = WORD.matcher(sentence);</span>
+<span class="fc" id="L80">            int sentenceWords = 0;</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            while (matcher.find()) {</span>
+<span class="fc" id="L82">                sentenceWords++;</span>
+<span class="fc" id="L83">                syllables += syllables(matcher.group());</span>
+            }
+            // A punctuation-free fragment counts as one sentence if it has words.
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (sentenceWords &gt; 0) {</span>
+<span class="fc" id="L87">                sentences++;</span>
+<span class="fc" id="L88">                words += sentenceWords;</span>
+            }
+        }
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (words == 0) {</span>
+<span class="fc" id="L92">            return unavailable(&quot;Readability unavailable: no words to analyze.&quot;);</span>
+        }
+
+        // Use floating-point ratios and retain full precision until display.
+<span class="fc" id="L96">        double wordsPerSentence = (double) words / sentences;</span>
+<span class="fc" id="L97">        double syllablesPerWord = (double) syllables / words;</span>
+<span class="fc" id="L98">        double ease = 206.835 - 1.015 * wordsPerSentence - 84.6 * syllablesPerWord;</span>
+<span class="fc" id="L99">        double grade = 0.39 * wordsPerSentence + 11.8 * syllablesPerWord - 15.59;</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        String note = unknown</span>
+<span class="fc" id="L101">                ? &quot;English-based estimate; the post language is unknown.&quot;</span>
+<span class="fc" id="L102">                : &quot;English estimate using approximate syllable counts.&quot;;</span>
+<span class="fc" id="L103">        return new Readability(words, sentences, syllables, ease, grade, note);</span>
+    }
+
+    /**
+     * Counts vowel groups, adjusts silent e, and keeps at least one syllable per word.
+     * @param input one matched word
+     * @return its approximate syllable count
+     * @author Nabeel Ali
+     */
+    private int syllables(String input) {
+        // Fold accents and remove apostrophes before applying the English heuristic.
+<span class="fc" id="L114">        String word = Normalizer.normalize(input.toLowerCase(Locale.ROOT), Normalizer.Form.NFD)</span>
+<span class="fc" id="L115">                .replaceAll(&quot;[^a-z]&quot;, &quot;&quot;);</span>
+<span class="fc" id="L116">        int count = (int) VOWELS.matcher(word).results().count();</span>
+<span class="fc bfc" id="L117" title="All 6 branches covered.">        if (count &gt; 1 &amp;&amp; word.endsWith(&quot;e&quot;) &amp;&amp; !word.matches(&quot;.*[^aeiouy]le$&quot;)) {</span>
+<span class="fc" id="L118">            count--;</span>
+        }
+<span class="fc" id="L120">        return Math.max(1, count);</span>
+    }
+
+    /**
+     * Creates an unavailable result without divisions by zero or misleading scores.
+     * @param note the user-readable reason
+     * @return a result with no analyzed words
+     * @author Nabeel Ali
+     */
+    private Readability unavailable(String note) {
+<span class="fc" id="L130">        return new Readability(0, 0, 0, 0, 0, note);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

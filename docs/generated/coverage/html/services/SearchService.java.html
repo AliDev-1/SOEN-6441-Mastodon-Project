@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=2;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MAWA coverage</a> &gt; <a href="index.source.html" class="el_package">services</a> &gt; <span class="el_source">SearchService.java</span></div><h1>SearchService.java</h1><pre class="source lang-java linenums">package services;
+
+import com.github.benmanes.caffeine.cache.AsyncCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Ticker;
+import com.typesafe.config.Config;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import models.SearchPage;
+
+/**
+ * Shares asynchronous page requests and retains bounded, expiring snapshots.
+ * &lt;p&gt;AI assistance: implementation support for Phase 5 validation and caching; Phase 7 cached navigation.&lt;/p&gt;
+ * @author Nabeel Ali
+ */
+@Singleton
+public final class SearchService {
+    /** Retrieves pages without blocking. */
+    private final MastodonClient client;
+    /** Validates inputs before cache lookup. */
+    private final SearchInput input;
+    /** Separates results by configured server. */
+    private final String instance;
+    /** Holds at most 100 pages after cache maintenance. */
+    private final AsyncCache&lt;List&lt;String&gt;, SearchPage&gt; pages;
+
+    /**
+     * Creates the application-wide cache with a monotonic clock.
+     * @param client the asynchronous API adapter
+     * @param config the application settings
+     * @param input the input validator
+     * @author Nabeel Ali
+     */
+    @Inject
+    public SearchService(MastodonClient client, Config config, SearchInput input) {
+<span class="fc" id="L41">        this(client, config, input, Ticker.systemTicker());</span>
+<span class="fc" id="L42">    }</span>
+
+    /**
+     * Allows tests to advance time without sleeping.
+     * @param client the API adapter
+     * @param config the application settings
+     * @param input the input validator
+     * @param ticker the monotonic clock
+     * @author Nabeel Ali
+     */
+<span class="fc" id="L52">    SearchService(MastodonClient client, Config config, SearchInput input, Ticker ticker) {</span>
+<span class="fc" id="L53">        this.client = client;</span>
+<span class="fc" id="L54">        this.input = input;</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        this.instance = config.hasPath(&quot;mastodon.instance&quot;)</span>
+<span class="fc" id="L56">                ? config.getString(&quot;mastodon.instance&quot;).strip() : &quot;&quot;;</span>
+        // Caffeine atomically shares pending loads and automatically removes failed loads.
+<span class="fc" id="L58">        this.pages = Caffeine.newBuilder().maximumSize(100)</span>
+<span class="fc" id="L59">                .expireAfterWrite(Duration.ofMinutes(10)).ticker(ticker)</span>
+<span class="fc" id="L60">                .executor(Runnable::run).buildAsync();</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * Returns a cached page or starts one shared asynchronous request.
+     * @param hashtag the browser search term
+     * @param cursor the optional pagination cursor
+     * @return the page or a controlled failed stage
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;SearchPage&gt; search(String hashtag, String cursor) {
+        try {
+<span class="fc" id="L72">            String tag = input.hashtag(hashtag);</span>
+<span class="fc" id="L73">            String maxId = input.cursor(cursor);</span>
+<span class="fc" id="L74">            List&lt;String&gt; key = List.of(instance, tag, maxId);</span>
+            // Copy the future so caller cancellation cannot cancel the shared request.
+<span class="fc" id="L76">            return pages.get(key, (ignored, executor) -&gt; client.fetchPosts(tag, maxId)</span>
+                    .thenApply(posts -&gt; new SearchPage(UUID.randomUUID().toString(), tag, maxId, posts))
+<span class="fc" id="L78">                    .toCompletableFuture()).copy();</span>
+<span class="fc" id="L79">        } catch (MastodonException failure) {</span>
+<span class="fc" id="L80">            return CompletableFuture.failedFuture(failure);</span>
+        }
+    }
+
+    /**
+     * Retrieves the exact completed snapshot without fetching replacement data.
+     * @param id the snapshot identifier from a result link
+     * @return the page, or status 410 if expired, evicted or unknown
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;SearchPage&gt; cachedPage(String id) {
+        // The synchronous view exposes only completed, unexpired values; no waits occur.
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (SearchPage page : pages.synchronous().asMap().values()) {</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (page.getId().equals(id)) {</span>
+<span class="fc" id="L94">                return CompletableFuture.completedFuture(page);</span>
+            }
+<span class="fc" id="L96">        }</span>
+<span class="fc" id="L97">        return CompletableFuture.failedFuture(new MastodonException(410,</span>
+                &quot;These search results have expired. Please search again.&quot;));
+    }
+    /**
+     * Retrieves older posts using the exact cached source page's final post ID.
+     * @param id the source snapshot identifier
+     * @return a cached or newly retrieved older page
+     * @author Nabeel Ali
+     */
+    public CompletionStage&lt;SearchPage&gt; olderPage(String id) {
+        // Expired source pages fail before any replacement query can be issued.
+<span class="fc" id="L108">        return cachedPage(id).thenCompose(page -&gt; {</span>
+            String cursor = page.getNextCursor();
+            if (cursor.isEmpty()) {
+                return CompletableFuture.failedFuture(new MastodonException(400,
+                        &quot;There are no older posts to request from this page. Please search again.&quot;));
+            }
+            return search(page.getHashtag(), cursor);
+        });
+    }
+
+    /**
+     * Finds a still-cached predecessor using the cursor relationship, without fetching.
+     * @param page the displayed snapshot
+     * @return the predecessor snapshot ID, or an empty string if unavailable
+     * @author Nabeel Ali
+     */
+    public String previousPageId(SearchPage page) {
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (page.getCursor().isEmpty()) {</span>
+<span class="fc" id="L126">            return &quot;&quot;;</span>
+        }
+        // Both pages must belong to the same hashtag in this instance's cache.
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        for (SearchPage candidate : pages.synchronous().asMap().values()) {</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">            if (candidate.getHashtag().equals(page.getHashtag())</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">                    &amp;&amp; candidate.getNextCursor().equals(page.getCursor())) {</span>
+<span class="fc" id="L132">                return candidate.getId();</span>
+            }
+<span class="fc" id="L134">        }</span>
+<span class="fc" id="L135">        return &quot;&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
