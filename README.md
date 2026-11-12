@@ -5,9 +5,9 @@ Mastodon hashtag posts and display them with readability scores and word statist
 
 ## Current status
 
-Phase 2 adds a running Play home page, automated controller and route tests,
-JaCoCo coverage, and Javadoc generation. Hashtag search and analysis are not
-implemented yet.
+Phase 3 adds an immutable post model, validated Mastodon JSON mapping, and readable
+HTML-to-text conversion. The home page still shows the application foundation;
+live API requests, hashtag search, and analysis are not implemented yet.
 
 ## Run locally
 
@@ -52,6 +52,7 @@ or reactive streaming will be implemented for Delivery 1.
 - [Setup instructions](docs/SETUP.md)
 - [Requirements and submission checklist](docs/REQUIREMENTS.md)
 - [Implementation phases](docs/PROGRESS.md)
+- [Design and data mapping](docs/DESIGN.md)
 - [AI assistance disclosure](docs/AI_USAGE.md)
 
 ## Development workflow

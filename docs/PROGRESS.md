@@ -6,8 +6,8 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | Phase | Deliverable | Status | Suggested commit |
 | --- | --- | --- | --- |
 | 1 | Requirements, allocation, exclusions, setup instructions | Repository preparation complete; external setup pending | `docs: record delivery one scope and setup` |
-| 2 | Play skeleton, tested home page, sbt quality tasks | Implemented and verified; awaiting manual commit | `build: initialize Play app and quality tools` |
-| 3 | Domain classes, JSON mapping, readable text | Not started | `feat: add post model and response mapping` |
+| 2 | Play skeleton, tested home page, sbt quality tasks | Committed by Nabeel as `b584e2a` | `build: initialize Play app and quality tools` |
+| 3 | Domain classes, JSON mapping, readable text | Implemented and verified; awaiting manual commit | `feat: add post model and response mapping` |
 | 4 | Asynchronous REST client and error handling | Not started | `feat: retrieve Mastodon hashtag posts asynchronously` |
 | 5 | Validation and shared bounded cache | Not started | `feat: validate and cache hashtag searches` |
 | 6 | Search controller, routes, templates, error UI | Not started | `feat: display searchable Mastodon results` |
@@ -48,3 +48,16 @@ instructions have been prepared. Record their actual completion separately.
 - Mastodon configuration is optional at this stage; the account and token are
   still needed before the Phase 4 live client check.
 - No commit, push, or tag was created by the assistant.
+
+## Phase 3 handoff
+
+- Added an immutable `Post`, a stateless `HtmlText` converter, and a
+  `MastodonPostMapper` that validates complete timeline responses.
+- Added exact-value tests for all post fields, optional-field defaults, API order,
+  unmodifiable results, malformed data, publication times, original links, and HTML.
+- `sbt test jacoco javadoc` passed: 28 tests, 100% line, method, and branch coverage
+  across the current handwritten production code.
+- No HTTP calls or UI features were added; the mapper is ready for the Phase 4 client.
+- Nabeel reported configuring the token in `.env`. Its contents were not read or
+  displayed, and authentication has not been verified yet.
+- No commit, push, tag, or change to the developer's running server was made.

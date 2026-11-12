@@ -1,7 +1,6 @@
-# Local credentials and environment files; keep the safe configuration example.
+# Local credentials and environment files.
 .env
 .env.*
-!.env.example
 conf/application.local.conf
 
 # sbt build products and local tool metadata.

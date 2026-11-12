@@ -93,13 +93,21 @@ connection check are still pending; they are not implied by these instructions.
 From the repository root:
 
 ```sh
-cp .env.example .env
+touch .env
 chmod 600 .env
 ```
 
 Edit `.env` locally. Set `MASTODON_INSTANCE` to the HTTPS instance origin, without
 an API path, and `MASTODON_ACCESS_TOKEN` to your user token. Never paste the token
 into chat, source code, screenshots, or commit messages.
+
+For a new setup, add these entries and replace the placeholders locally. If your
+`.env` is already configured, keep its existing values.
+
+```dotenv
+MASTODON_INSTANCE='https://your-instance.example'
+MASTODON_ACCESS_TOKEN=''
+```
 
 Load your own local file into the terminal that will run sbt:
 
@@ -110,8 +118,8 @@ set +a
 ```
 
 This shell command executes the file: source only the `.env` you created and
-reviewed. sbt does not load `.env` automatically. The tracked `.env.example`
-contains placeholders only, and `.gitignore` excludes the real file.
+reviewed. sbt does not load `.env` automatically. `.gitignore` excludes this local
+configuration file.
 
 After the client is implemented, manually verify a hashtag request using the
 running app. Automated tests will use mocks and must not contact Mastodon.

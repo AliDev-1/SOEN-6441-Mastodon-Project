@@ -25,7 +25,7 @@ choices are distinguished from assignment requirements below.
 - [ ] Empty successful searches display a clear no-results state (5.2).
 - [ ] All controller actions asynchronous; no blocking future waits or sleeps in production code (5.5).
 - [ ] No application actors, WebSockets, streaming API, or reactive streams (sections 1 and 7).
-- [ ] Domain posts independent of REST transport, allowing future Delivery 2 adaptation (8).
+- [x] Domain posts independent of REST transport, allowing future Delivery 2 adaptation (8); implemented in Phase 3.
 
 
 ## Readability and word statistics

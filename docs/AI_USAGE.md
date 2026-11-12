@@ -22,6 +22,7 @@ copies of the complete conversation:
 | Scope | Implement the group component, readability, and word statistics. | Selected feature scope and ordering. |
 | 1 | Implement the agreed plan one phase at a time; leave all commits and pushes to the developer. | README, setup instructions, requirements checklist, progress record, Git exclusions, and environment example. |
 | 2 | Move on to Phase 2 after the manual Phase 1 commit and push. | Play skeleton, build configuration, JDK setup, home page, controller and route tests, coverage and Javadoc tasks, and documentation updates. |
+| 3 | Implement the post domain model, JSON mapping, and readable text conversion with tests. | Implementation and test-design assistance for post values, mapping validation, HTML conversion, and related documentation. |
 
 ## Ongoing disclosure
 

@@ -17,6 +17,29 @@ no conditional branches. Hashtag, API response, cache, and analysis partitions w
 be added alongside those features. Tests assert specified values, not just nonempty
 responses. Future waits are confined to test code.
 
+## Phase 3 cases
+
+| Input partition | Expected result | Test coverage |
+| --- | --- | --- |
+| Complete post values; each null constructor argument | Exact getters; field-specific null rejection | `PostTest` |
+| Null, empty, whitespace, plain text | Exact normalized output | `HtmlTextTest` cases 0–3 |
+| Paragraphs, breaks, entities, Unicode, links | Words remain readable and separated | `HtmlTextTest` cases 4–7 |
+| Scripts/styles, broken markup, image-only text, encoded tags | No executable nodes; exact text including literal encoded tags | `HtmlTextTest` cases 8–11 |
+| Valid timeline with extra fields and multiple posts | Exact fields, preserved order, immutable list | `mapsValuesInApiOrder` |
+| Empty array | Empty list | `acceptsEmptyArray` |
+| Missing body, malformed JSON, trailing data, wrong root type | Specific validation error | `rejectsInvalidBodies` |
+| Invalid entry after a valid post | Entire response rejected | `rejectsInvalidEntries` |
+| Missing, null, numeric, or blank required strings; invalid account | Field-specific error | `rejectsInvalidRequiredFields`, `rejectsInvalidAccounts` |
+| Optional values missing, null, blank, or wrong type | Documented defaults or field-specific error | `defaultsOptionalFields`, `rejectsIncorrectOptionalTypes` |
+| Empty content, metadata whitespace, timestamp offset | Valid post with exact normalized values | `acceptsEmptyContentAndTrimsMetadata` |
+| Malformed or impossible dates | Publication-date error | `rejectsInvalidDates` |
+| HTTP, HTTPS, executable/relative/hostless/malformed URLs; missing fallback | Accepted web links or validation error | `validatesOriginalLinks` |
+
+Related partitions are grouped in tests, but invalid fields are changed separately
+so one error does not mask another. All JSON is synthetic; no credentials or live
+responses are used. Phase 3 verification passed 28 tests and achieved 100% line,
+method, and branch coverage of the current handwritten production code.
+
 ## Coverage rules
 
 JaCoCo measures all compiled application classes except compiler-generated routes,
