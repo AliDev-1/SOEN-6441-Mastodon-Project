@@ -5,10 +5,11 @@ Mastodon hashtag posts and display them with readability scores and word statist
 
 ## Current status
 
-Phase 8 adds Flesch Reading Ease and Flesch–Kincaid Grade Level estimates to each
-supported post, plus a details page with the exact cached content and calculation
-counts. Numbered pagination and all metadata remain available. Word statistics
-follow in Phase 9.
+Phase 9 adds word statistics for the displayed cached results, linked from the
+hashtag above the posts. The page shows total occurrences, unique words, and a
+frequency table. Search, numbered pagination, readability, and post details are
+implemented. Final verification, documentation packaging, and submission checks
+remain in Phases 10–12.
 
 ## Run locally
 
@@ -52,7 +53,10 @@ See [testing notes](docs/TESTING.md) for the current test cases and coverage rul
 6. Click an author's name or **View post details and readability** to open the saved
    post, both scores, and the word/sentence/syllable counts. **Back to results** keeps
    your page number and snapshot without another API request.
-7. Correct invalid input or retry after an API error. Repeated normalized searches
+7. Select the linked hashtag above the results to open **Word statistics** for that
+   saved page only. The table sorts frequencies from highest to lowest, with ties
+   ordered alphabetically. **Back to results** preserves the snapshot and page number.
+8. Correct invalid input or retry after an API error. Repeated normalized searches
    reuse cached results for ten minutes, subject to the 100-page retention limit.
 
 After dependency changes (including Phase 5's Caffeine addition), stop the existing
@@ -70,14 +74,19 @@ and Reading Ease above 100 can occur, especially for very short posts. These sco
 do not measure meaning or writing quality. Details and formulas are documented in
 [the design notes](docs/DESIGN.md).
 
-## Planned features
+## Word-count assumptions
 
-- Cached results shared by the search and analysis pages.
-- A linked word-frequency page implemented with Java Streams.
+Statistics combine all posts and languages on the displayed page, not every result
+for the hashtag. Case and canonical Unicode spellings are normalized; accents remain
+distinct. Internal straight and curly apostrophes are combined. URLs, numbers, and
+emoji are excluded; hyphens and other separators split words. Letters in hashtags
+and mentions still count. Common words such as “the” are retained. Equal frequencies
+use deterministic Unicode string order, not language-specific dictionary collation.
+Languages without spaces are treated as letter sequences rather than linguistically
+segmented words. See the design notes for the complete policy and examples.
 
-The application will use Java 21, Play Java, sbt, and ordinary server-rendered pages.
-Controller actions and HTTP calls will be asynchronous. No actors, WebSockets,
-or reactive streaming will be implemented for Delivery 1.
+The application uses Java 21, Play Java, sbt, and server-rendered pages. Controller
+actions and HTTP calls are asynchronous. Search and analysis reuse cached posts.
 
 ## Documentation
 

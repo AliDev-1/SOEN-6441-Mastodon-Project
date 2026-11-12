@@ -28,6 +28,7 @@ copies of the complete conversation:
 | 6 | Connect cached searches to the controller, routes, templates, and error UI. | Implementation and test-design assistance for search forms, escaped metadata display, asynchronous error handling, responsive styles, integration tests, and documentation. |
 | 7 | Implement cursor pagination and cached page navigation after the Phase 6 commit. | Implementation and test-design assistance for opaque cursors, snapshot routes, predecessor lookup, pagination UI, expiry/error cases, and documentation; follow-up assistance for clearer labels, placement, and numbered navigation. |
 | 8 | Implement post readability and cached post details after the Phase 7 commit. | Implementation and test-design assistance for Flesch formulas, English text heuristics, immutable measurements, overview/detail templates, no-refetch integration tests, and documented limitations. |
+| 9 | Implement Java Streams word statistics after the Phase 8 commit. | Implementation and test-design assistance for Unicode tokenization, grouped counts and ordering, immutable models, cached statistics routes/templates, integration tests, and documentation. |
 
 ## Ongoing disclosure
 

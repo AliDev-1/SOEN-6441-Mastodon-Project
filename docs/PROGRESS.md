@@ -12,8 +12,8 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | 5 | Validation and shared bounded cache | Committed by Nabeel as `8359f87` | `feat: validate and cache hashtag searches` |
 | 6 | Search controller, routes, templates, error UI | Committed by Nabeel as `19a2cb4` | `feat: display searchable Mastodon results` |
 | 7 | Cursor pagination and cached page navigation | Committed by Nabeel as `a433732` | `feat: paginate cached hashtag results` |
-| 8 | Readability scores and post details page | Implemented and verified; awaiting manual commit | `feat: add post readability and details` |
-| 9 | Streams word analysis and statistics page | Not started | `feat: add word frequency statistics with streams` |
+| 8 | Readability scores and post details page | Committed by Nabeel as `fdc40ce` | `feat: add post readability and details` |
+| 9 | Streams word analysis and statistics page | Implemented and verified; awaiting manual commit | `feat: add word frequency statistics with streams` |
 | 10 | Coverage completion and full-flow verification | Not started | `test: complete branch coverage and failure cases` |
 | 11 | Final documentation, diagram, generated Javadoc | Not started | `docs: complete design testing and API documentation` |
 | 12 | Clean-checkout verification, package, demo rehearsal | Not started | `chore: prepare delivery one submission` |
@@ -143,3 +143,17 @@ instructions have been prepared. Record their actual completion separately.
   all eleven handwritten production classes, and successful Javadoc generation.
 - No live Mastodon request, commit, push, tag, or server restart was performed.
 - Browser visual verification remains pending; rendered responses are route-tested.
+
+## Phase 9 handoff
+
+- Added immutable frequency/statistics models and a stateless Java Streams analyzer.
+- Linked the hashtag above results to statistics for that exact retained page.
+- Added total/unique counts, descending frequencies with deterministic ties, an empty
+  state, counting explanations, and a numbered return link.
+- Documented Unicode, apostrophe, URL, number, separator, and multilingual behavior.
+- Tests verify exact frequencies/order, normalization, page isolation, immutable
+  results, no-refetch route navigation, empty results, and asynchronous errors.
+- `sbt test jacoco javadoc` passed: 84 tests, 100% line/method/branch coverage across
+  fourteen handwritten production classes, and successful Javadoc generation.
+- No live API call, commit, push, tag, or server restart was performed. Browser visual
+  verification remains pending; route tests verify rendered HTML.

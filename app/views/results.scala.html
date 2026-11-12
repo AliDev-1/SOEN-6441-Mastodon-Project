@@ -1,6 +1,7 @@
 @(page: models.SearchPage, previousId: String, pageNumber: Int, scores: java.util.Map[String, models.Readability])
 @layout("Search results") {
-    <h1>Results for #@page.getHashtag()</h1>
+    <h1>Results for <a class="word-statistics-link" href="@routes.ApplicationController.words(page.getId(), pageNumber)" aria-describedby="word-statistics-help">#@page.getHashtag()</a></h1>
+    <p id="word-statistics-help">Select the hashtag to view word frequencies for this page of results.</p>
     @searchForm(page.getHashtag())
     @pagination(page, previousId, pageNumber, "top")
     @* Display only escaped text and validated original links from the domain model. *@

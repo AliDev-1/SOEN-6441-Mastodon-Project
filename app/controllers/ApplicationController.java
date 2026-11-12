@@ -3,6 +3,7 @@ package controllers;
 import jakarta.inject.Inject;
 import services.SearchService;
 import services.ReadabilityService;
+import services.WordStatisticsService;
 import models.Post;
 import models.SearchPage;
 import services.MastodonException;
@@ -16,7 +17,7 @@ import play.mvc.Result;
  * Handles browser requests and delegates application work to services.
  *
  * <p>AI assistance: implementation support for the Phase 2 request for one
- * asynchronous controller and a tested home page; Phase 6 search and error UI; Phase 7 pagination; Phase 8 cached readability and details.</p>
+ * asynchronous controller and a tested home page; Phase 6 search and error UI; Phase 7 pagination; Phase 8 cached readability and details; Phase 9 word statistics.</p>
  *
  * @author Nabeel Ali
  */
@@ -26,18 +27,22 @@ public class ApplicationController extends Controller {
     private final SearchService searches;
     /** Calculates local readability estimates from the cached posts. */
     private final ReadabilityService readability;
+    /** Counts words from the displayed cached page. */
+    private final WordStatisticsService wordStatistics;
 
     /**
      * Creates the application controller for Play dependency injection.
      *
      * @param searches the asynchronous search service
      * @param readability the local readability calculator
+     * @param wordStatistics the local word-frequency analyzer
      * @author Nabeel Ali
      */
     @Inject
-    public ApplicationController(SearchService searches, ReadabilityService readability) {
+    public ApplicationController(SearchService searches, ReadabilityService readability, WordStatisticsService wordStatistics) {
         this.searches = searches;
         this.readability = readability;
+        this.wordStatistics = wordStatistics;
     }
 
     /**
@@ -111,6 +116,22 @@ public class ApplicationController extends Controller {
             Post post = readability.findPost(page, postId);
             return ok(views.html.details.render(page, post, readability.analyze(post), pageNumber));
         }).exceptionally(failure -> searchError("", failure));
+    }
+
+    /**
+     * Renders word frequencies for the exact cached page without a new API request.
+     * @param id the snapshot identifier
+     * @param pageNumber the result page position for the return link
+     * @return asynchronous statistics or a controlled expiry/error response
+     * @author Nabeel Ali
+     */
+    public CompletionStage<Result> words(String id, int pageNumber) {
+        if (invalidPageNumber(pageNumber)) {
+            return CompletableFuture.completedFuture(searchError("", new MastodonException(400, "Invalid page number. Please search again.")));
+        }
+        return searches.cachedPage(id)
+                .thenApply(page -> ok(views.html.wordStatistics.render(page, wordStatistics.analyze(page), pageNumber)))
+                .exceptionally(failure -> searchError("", failure));
     }
 
     /**

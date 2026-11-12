@@ -71,3 +71,11 @@ a.page-button:hover { background: #e5edf6; }
 .scoring-method { margin-top: 1rem; }
 .scoring-method summary { cursor: pointer; font-weight: 700; }
 summary:focus-visible { outline: 3px solid #aa5300; outline-offset: 3px; }
+
+/* Keep frequency rows readable and long Unicode words within the viewport. */
+.word-frequencies { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; }
+.word-frequencies caption { text-align: left; margin-bottom: 0.75rem; }
+.word-frequencies th, .word-frequencies td { padding: 0.65rem 1rem; border-bottom: 1px solid #d4dce5; text-align: left; overflow-wrap: anywhere; }
+.word-frequencies thead { background: #e5edf6; }
+.word-frequencies td, .word-frequencies thead th:last-child { text-align: right; }
+.statistics-totals { margin: 1.5rem 0; }

@@ -41,7 +41,7 @@ public class ApplicationControllerTest extends WithApplication {
     @Test
     public void indexReturnsHomePage() {
         // Waiting for a future is permitted in tests, but not production code.
-        Result result = new ApplicationController(org.mockito.Mockito.mock(services.SearchService.class), new services.ReadabilityService()).index().toCompletableFuture().join();
+        Result result = new ApplicationController(org.mockito.Mockito.mock(services.SearchService.class), new services.ReadabilityService(), new services.WordStatisticsService()).index().toCompletableFuture().join();
         assertHomePage(result);
     }
 

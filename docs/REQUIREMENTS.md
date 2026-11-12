@@ -20,7 +20,7 @@ choices are distinguished from assignment requirements below.
 - [x] No more than 40 posts requested at a time (4.1); enforced by the Phase 4 client.
 - [x] Author, date/time, language, readable content, original link, and visibility displayed (4.2).
 - [x] API pagination for additional results (5.1); Phase 7 routes use the last post ID as `max_id`, with cached navigation.
-- [ ] Cached data reused between searches and individual analyses (5.3).
+- [x] Cached data reused between searches and individual analyses (5.3); verified by readability and statistics route tests.
 - [ ] Meaningful errors and appropriate status codes for invalid input, API unavailability, HTTP/authentication errors, and malformed data (5.2).
 - [x] Empty successful searches display a clear no-results state (5.2).
 - [ ] All controller actions asynchronous; no blocking future waits or sleeps in production code (5.5).
@@ -32,9 +32,9 @@ choices are distinguished from assignment requirements below.
 
 - [x] Show Flesch Reading Ease and Flesch–Kincaid Grade Level for post content (4.3).
 - [x] Clicking a result opens a post details page with readability information (4.3).
-- [ ] Link word statistics from the search term above the results (4.3).
-- [ ] Count unique words and display their frequencies in descending order (4.3).
-- [ ] Use Java Streams for word-content processing (4.3).
+- [x] Link word statistics from the search term above the results (4.3).
+- [x] Count unique words and display their frequencies in descending order (4.3).
+- [x] Use Java Streams for word-content processing (4.3).
 
 The assignment's term “overview's description” is interpreted as post content in
 the results overview. Both scores will appear there and on the details page.

@@ -170,6 +170,26 @@ with a mocked Mastodon boundary. Phase 8 passed 75 tests with 100% line, method,
 and branch coverage across eleven handwritten production classes. Javadoc passed.
 No live API or browser visual verification was performed in this phase.
 
+## Phase 9 cases
+
+| Partition | Expected result |
+| --- | --- |
+| Repeated words across posts, stop words, frequency ties | Exact aggregated counts, descending frequency, natural-order ties |
+| Case, NFC-equivalent accents, accented/unaccented words, curly apostrophes | Equivalent spellings combine; accents retained; internal apostrophes preserved |
+| URLs, numbers, emoji, hyphens, markers, embedded digits/underscores | Exclusions and letter-run rules match the documented policy |
+| Empty page or text without words | Zero totals and empty frequencies |
+| Successive analyses of different pages | No counts leak across pages |
+| Caller mutation of source list or returned list | Defensive copy and immutable results |
+| Hashtag link → statistics → results, repeated statistics visit | Exact ordered table, correct totals/scope, one API request |
+| Empty statistics on page 3 | Clear empty state, no table, return URL preserves page number |
+| Invalid page number and pending lookup failing with expiry | 400 before service access; asynchronous 410 |
+
+`WordStatisticsServiceTest` uses synthetic content and exact ordered expected pairs.
+`WordStatisticsTest` verifies both immutable model classes. Controller integration
+tests exercise the real analyzer and cache with a mocked client. Phase 9 passed
+84 tests with 100% line/method/branch coverage across fourteen handwritten production
+classes; Javadoc also passed. No live API or browser visual verification occurred.
+
 ## Coverage rules
 
 JaCoCo measures all compiled application classes except compiler-generated routes,

@@ -238,7 +238,45 @@ metadata is not language detection; mixed-language posts also remain approximate
 Short social posts provide especially weak evidence for a reading grade. The UI
 labels scores as estimates and exposes the counting rules on the details page.
 
-## Subsequent components
+## Word statistics with Java Streams
 
-Phase 9 adds Java Streams word statistics over the displayed cached page. This
-pipeline is separate from per-post readability and remains to be implemented.
+`WordStatisticsService.analyze(SearchPage)` has no network or mutable shared state.
+It uses a sequential Java Streams pipeline: map cached posts to plain-text content,
+flat-map each content into tokens, group with `Collectors.groupingBy` and
+`Collectors.counting`, then map entries to immutable `WordFrequency` values. A
+comparator sorts counts descending and breaks ties using natural Java string order.
+`WordStatistics` defensively copies the list, reports its size as the unique count,
+and uses `mapToLong(...).sum()` for total occurrences.
+
+The tokenizer removes HTTP(S)/www URLs through the next whitespace, converts curly
+apostrophes to straight ones, lowercases with `Locale.ROOT`, and applies Unicode
+NFC normalization. Words start with a Unicode letter, continue with letters or
+combining marks, and may include internal apostrophes followed by another letter.
+Accents are retained: `café` and `cafe` are different words, while composed and
+decomposed spellings of `café` combine. `CAN’T` and `can't` combine. Hyphens,
+underscores, and digits separate letter runs (`a1b_c` gives `a`, `b`, `c`). Standalone
+numbers, emoji, and punctuation contribute no words. Letters in hashtags and
+mentions count; stop words remain included. No stemming or language-specific
+segmentation is performed. Counts include all languages, unlike English-only
+readability estimates. Unicode natural order is deterministic but is not a
+language-specific alphabetical collation.
+
+`GET /results/:id/words?pageNumber=...` reads the retained snapshot and computes
+local statistics. The search term in the results heading links to this route, with
+an explanation of its purpose. The view identifies the page scope, shows total
+occurrences and unique words, and renders an escaped accessible table. Empty input
+is HTTP 200 with zero counts and a no-words message. Invalid page numbers return
+400; unavailable snapshots return 410 without refetching. A return link preserves
+the snapshot and page number. Reading statistics or returning to results makes no
+additional Mastodon request.
+
+For example, posts `Banana apple APPLE the` and `banana cherry the apple` produce
+8 total occurrences and 4 unique words: `apple:3`, `banana:2`, `the:2`, `cherry:1`.
+The analysis is intentionally limited to the current page (at most 40 posts);
+fetching every matching post is neither necessary nor performed.
+
+## Remaining delivery work
+
+Phases 10–12 complete the final verification, architecture diagram, documentation
+artifacts, packaging, and submission/demo checklist. Feature-level tests do not
+by themselves establish completion of those external deliverables.

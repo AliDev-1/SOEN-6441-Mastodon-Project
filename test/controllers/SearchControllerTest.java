@@ -23,7 +23,7 @@ import static play.test.Helpers.*;
 
 /**
  * Exercises search routing, rendering and asynchronous errors without live HTTP.
- * <p>AI assistance: test-design support for the Phase 6 search interface, Phase 7 pagination, and Phase 8 readability.</p>
+ * <p>AI assistance: test-design support for the Phase 6 search interface, Phase 7 pagination, Phase 8 readability, and Phase 9 word statistics.</p>
  * @author Nabeel Ali
  */
 public class SearchControllerTest extends WithApplication {
@@ -114,7 +114,7 @@ public class SearchControllerTest extends WithApplication {
     public void escapesInvalidInputOnError() {
         String input = "\"><script>bad()</script>";
         when(searches.search(input, null)).thenReturn(CompletableFuture.failedFuture(new MastodonException(400, "Invalid hashtag")));
-        Result result = new ApplicationController(searches, new services.ReadabilityService()).search(input).toCompletableFuture().join();
+        Result result = new ApplicationController(searches, new services.ReadabilityService(), new services.WordStatisticsService()).search(input).toCompletableFuture().join();
         Document doc = Jsoup.parse(contentAsString(result));
         assertEquals(input, doc.selectFirst("input").val());
         assertTrue(doc.select("script").isEmpty());
@@ -127,7 +127,7 @@ public class SearchControllerTest extends WithApplication {
     public void waitsAsynchronouslyAndHidesUnexpectedFailures() {
         CompletableFuture<SearchPage> pending = new CompletableFuture<>();
         when(searches.search("java", null)).thenReturn(pending);
-        var result = new ApplicationController(searches, new services.ReadabilityService()).search("java").toCompletableFuture();
+        var result = new ApplicationController(searches, new services.ReadabilityService(), new services.WordStatisticsService()).search("java").toCompletableFuture();
         assertFalse(result.isDone());
         pending.completeExceptionally(new IllegalStateException("private credential details"));
         assertEquals(500, result.join().status());
@@ -135,7 +135,7 @@ public class SearchControllerTest extends WithApplication {
         assertTrue(contentAsString(result.join()).contains("Something went wrong while searching. Please try again."));
         // A wrapper without a cause is also handled without revealing its text.
         when(searches.search("java", null)).thenReturn(CompletableFuture.failedFuture(new CompletionException("private", null)));
-        assertEquals(500, new ApplicationController(searches, new services.ReadabilityService()).search("java").toCompletableFuture().join().status());
+        assertEquals(500, new ApplicationController(searches, new services.ReadabilityService(), new services.WordStatisticsService()).search("java").toCompletableFuture().join().status());
     }
     /** Verifies real validation and cache reuse across repeated browser requests.
      * @author Nabeel Ali
@@ -336,9 +336,74 @@ public class SearchControllerTest extends WithApplication {
     public void resolvesDetailsAsynchronously() {
         CompletableFuture<SearchPage> pending = new CompletableFuture<>();
         when(searches.cachedPage("pending")).thenReturn(pending);
-        var result = new ApplicationController(searches, new services.ReadabilityService()).details("pending", "missing", 1).toCompletableFuture();
+        var result = new ApplicationController(searches, new services.ReadabilityService(), new services.WordStatisticsService()).details("pending", "missing", 1).toCompletableFuture();
         assertFalse(result.isDone());
         pending.complete(new SearchPage("pending", "java", "", List.of()));
         assertEquals(404, result.join().status());
+    }
+    /** Follows the hashtag statistics link using the exact cached page without refetching.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void showsCachedWordStatistics() {
+        services.MastodonClient client = mock(services.MastodonClient.class);
+        Post post = new Post("post", "Author", "author", Instant.EPOCH, "en",
+                "Cat cat dog the", "https://example.org/1", "public");
+        when(client.fetchPosts("java", "")).thenReturn(CompletableFuture.completedFuture(List.of(post)));
+        Application integrated = new GuiceApplicationBuilder()
+                .overrides(bind(services.MastodonClient.class).toInstance(client)).build();
+        running(integrated, () -> {
+            Result search = route(integrated, new Http.RequestBuilder().method("GET").uri("/search?hashtag=java"));
+            Document overview = Jsoup.parse(contentAsString(search));
+            assertEquals("#java", overview.selectFirst("h1 .word-statistics-link").text());
+            String url = overview.selectFirst(".word-statistics-link").attr("href");
+            Result result = route(integrated, new Http.RequestBuilder().method("GET").uri(url));
+            assertEquals(200, result.status());
+            Document doc = Jsoup.parse(contentAsString(result));
+            assertEquals("Word statistics for #java", doc.selectFirst("h1").text());
+            assertEquals("4", doc.selectFirst(".total-words").text());
+            assertEquals("3", doc.selectFirst(".unique-words").text());
+            assertEquals(List.of("cat 2", "dog 1", "the 1"), doc.select("tbody tr").eachText());
+            assertTrue(doc.selectFirst(".statistics-scope").text().contains("not the entire hashtag timeline"));
+            Result back = route(integrated, new Http.RequestBuilder().method("GET").uri(doc.selectFirst(".back-to-results").attr("href")));
+            assertEquals(contentAsString(search), contentAsString(back));
+            route(integrated, new Http.RequestBuilder().method("GET").uri(url));
+            verify(client, times(1)).fetchPosts("java", "");
+            verifyNoMoreInteractions(client);
+        });
+    }
+
+    /** Checks the empty state and page-number preservation for statistics links.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void showsEmptyWordStatistics() {
+        when(searches.cachedPage("empty")).thenReturn(CompletableFuture.completedFuture(new SearchPage("empty", "java", "cursor", List.of())));
+        Result result = route(app, new Http.RequestBuilder().method("GET").uri("/results/empty/words?pageNumber=3"));
+        assertEquals(200, result.status());
+        Document doc = Jsoup.parse(contentAsString(result));
+        assertEquals("0", doc.selectFirst(".total-words").text());
+        assertEquals("0", doc.selectFirst(".unique-words").text());
+        assertEquals("No words to count on this page.", doc.getElementById("no-words").text());
+        assertTrue(doc.select("table").isEmpty());
+        assertEquals("/results/empty?pageNumber=3", doc.selectFirst(".back-to-results").attr("href"));
+    }
+
+    /** Checks invalid numbers, expiry, and asynchronous completion for statistics.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void handlesWordStatisticsErrorsAsynchronously() {
+        Result invalid = route(app, new Http.RequestBuilder().method("GET").uri("/results/id/words?pageNumber=0"));
+        assertEquals(400, invalid.status());
+        verifyNoInteractions(searches);
+        CompletableFuture<SearchPage> pending = new CompletableFuture<>();
+        when(searches.cachedPage("pending")).thenReturn(pending);
+        var result = new ApplicationController(searches, new services.ReadabilityService(), new services.WordStatisticsService())
+                .words("pending", 1).toCompletableFuture();
+        assertFalse(result.isDone());
+        pending.completeExceptionally(new MastodonException(410, "Please search again."));
+        assertEquals(410, result.join().status());
+        assertTrue(contentAsString(result.join()).contains("Please search again."));
     }
 }

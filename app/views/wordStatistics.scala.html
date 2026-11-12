@@ -1,0 +1,29 @@
+@(page: models.SearchPage, statistics: models.WordStatistics, pageNumber: Int)
+@layout("Word statistics") {
+    <a class="back-to-results" href="@routes.ApplicationController.cached(page.getId(), pageNumber)">← Back to results · Page @pageNumber</a>
+    <h1>Word statistics for #@page.getHashtag()</h1>
+    <p class="statistics-scope">Only the @page.getPosts().size() posts on saved page @pageNumber are included, not the entire hashtag timeline.</p>
+    <dl class="metadata statistics-totals">
+        <div><dt>Total word occurrences</dt><dd class="total-words">@statistics.getTotalWords()</dd></div>
+        <div><dt>Unique words</dt><dd class="unique-words">@statistics.getUniqueWords()</dd></div>
+    </dl>
+    @if(statistics.getFrequencies().isEmpty()) {
+        <p class="notice" id="no-words">No words to count on this page.</p>
+    } else {
+        <table class="word-frequencies">
+            <caption>Words sorted by frequency, highest first; ties are ordered alphabetically.</caption>
+            <thead><tr><th scope="col">Word</th><th scope="col">Occurrences</th></tr></thead>
+            <tbody>
+                @for(entry <- statistics.getFrequencies()) {
+                    <tr><th scope="row">@entry.getWord()</th><td>@entry.getCount()</td></tr>
+                }
+            </tbody>
+        </table>
+    }
+    <details class="scoring-method">
+        <summary>How words are counted</summary>
+        <p>Counts combine all post languages. Case and equivalent Unicode spellings are normalized; accents are retained. Straight and curly internal apostrophes are treated alike.</p>
+        <p>URLs, numbers, and emoji are excluded. Hyphens and other separators split words; letters in hashtags and mentions still count. Common words such as “the” and “and” are included.</p>
+        <p>Words are letter sequences, so these counts do not provide language-specific segmentation for scripts without spaces. Ties use Unicode string order rather than a language-specific dictionary.</p>
+    </details>
+}

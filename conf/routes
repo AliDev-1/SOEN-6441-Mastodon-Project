@@ -2,6 +2,7 @@
 GET     /                       controllers.ApplicationController.index()
 GET     /search                 controllers.ApplicationController.search(hashtag: String ?= "")
 
+GET     /results/:id/words       controllers.ApplicationController.words(id: String, pageNumber: Int ?= 1)
 GET     /results/:id/posts/:postId controllers.ApplicationController.details(id: String, postId: String, pageNumber: Int ?= 1)
 GET     /results/:id/older      controllers.ApplicationController.older(id: String, pageNumber: Int ?= 1)
 GET     /results/:id            controllers.ApplicationController.cached(id: String, pageNumber: Int ?= 1)
