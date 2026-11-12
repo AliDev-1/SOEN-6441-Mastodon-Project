@@ -276,10 +276,12 @@ For example, posts `Banana apple APPLE the` and `banana cherry the apple` produc
 The analysis is intentionally limited to the current page (at most 40 posts);
 fetching every matching post is neither necessary nor performed.
 
-## Remaining delivery work
+## Final phase and delivery status
 
-Phase 10 (Coverage and full-flow verification) verification is recorded in [VERIFICATION.md](VERIFICATION.md), and
-Phase 11 (Documentation and generated reports) provides the diagram and generated reports. Phase 12 (Final delivery checks) still needs the
-clean-checkout run, package inspection, and external submission/demo checks in
-[DELIVERY.md](DELIVERY.md). Automated tests do not establish completion of those
-external deliverables.
+Phase 10 (Coverage and full-flow verification) is recorded in
+[VERIFICATION.md](VERIFICATION.md). Phase 11 (Documentation and generated reports)
+is the final project phase and provides the architecture diagram and generated reports.
+Outstanding clean-checkout, package inspection, and external submission/demo checks
+remain tracked in [REQUIREMENTS.md](REQUIREMENTS.md). They are delivery checks,
+not a separate implementation phase. Automated tests do not establish completion
+of those external deliverables.

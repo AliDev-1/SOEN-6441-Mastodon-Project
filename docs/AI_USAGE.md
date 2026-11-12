@@ -17,6 +17,8 @@ source.
 
 ## What each phase means
 
+The project has eleven phases. Phase 11 (Documentation) is the final phase.
+
 | Phase | Work covered |
 | --- | --- |
 | 1 — Requirements and setup | Scope, allocation, repository preparation, configuration guidance |
@@ -30,7 +32,6 @@ source.
 | 9 — Word statistics | Java Streams tokenization, counts, sorting, cached statistics page |
 | 10 — Verification | Full-flow tests, coverage audit, failure/retry/expiry checks |
 | 11 — Documentation | Updated documentation, architecture diagram, packaged generated reports |
-| 12 — Final delivery checks | Planned clean-checkout verification, package inspection, demo preparation |
 
 ## Prompt record
 
@@ -121,11 +122,3 @@ source.
 3. Describe the architecture so I can turn it into a diagram.
 4. Review my Javadoc comments for clarity and completeness.
 5. How do I package the generated Javadoc and coverage reports?
-
-### 12. Final delivery checks
-
-1. Give me a checklist to verify the project from a clean checkout.
-2. What should I check when inspecting the final package?
-3. Which files should be excluded from the submission?
-4. Help me plan a short demo of the main features.
-5. What questions might come up during the demo?

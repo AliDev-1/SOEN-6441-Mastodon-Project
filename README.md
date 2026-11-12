@@ -8,8 +8,9 @@ Mastodon hashtag posts and displays them with readability scores and word statis
 Search, numbered pagination, readability, post details, and word statistics are
 implemented. Phase 10 (Coverage and full-flow verification) verification passed 88 tests with 100% line, method, and
 branch coverage of handwritten production code. Full-flow tests mock only the
-outbound HTTP boundary. Phase 11 (Documentation and generated reports) supplies final documentation and generated reports; submission checks
-remain in Phase 12 (Final delivery checks); see the [verification record](docs/VERIFICATION.md).
+outbound HTTP boundary. Phase 11 (Documentation and generated reports) is the final
+project phase and supplies the final documentation and generated reports. Outstanding
+submission checks are tracked separately in the [verification record](docs/VERIFICATION.md).
 
 ## Run locally
 
@@ -117,13 +118,6 @@ the same saved page, without another Mastodon request. See the
 - [Testing strategy](docs/TESTING.md)
 - [Verification record](docs/VERIFICATION.md)
 - [Generated reports](docs/GENERATED_REPORTS.md)
-- [Delivery and demonstration checklist](docs/DELIVERY.md)
-
-## Development workflow
-
-Implement one phase at a time, including its tests and documentation. Review the
-changes and verification results before moving on. Nabeel Ali performs all commits
-and pushes manually; the assistant must not commit, push, or create release tags.
 
 ## Configuration
 

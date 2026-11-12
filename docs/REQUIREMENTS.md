@@ -52,7 +52,6 @@ the results overview. Both scores appear there and on the details page.
 - [x] Include generated HTML Javadoc covering private methods and tests (5.4); prepared in `docs/generated/javadoc/`.
 - [x] Add concise explanatory comments above logical code blocks (developer preference).
 
-Phase 11 (Documentation and generated reports) documentation artifacts are indexed in [DELIVERY.md](DELIVERY.md).
 Verified implementation/test items above are supported by the
 [Phase 10 (Coverage and full-flow verification) verification record](VERIFICATION.md). Final packaging and external
 submission items remain separate checks.

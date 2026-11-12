@@ -67,7 +67,8 @@ ordering, and escaping. See [the testing strategy](TESTING.md) for the partition
 
 Browser visual inspection, final clean-checkout run, dependency resolution in that
 checkout, submission archive inspection, and the signed originality form remain
-for Phase 12 (Final delivery checks). The diagram and report copies are prepared in Phase 11 (Documentation and generated reports). Account ownership, external team-information
+outstanding delivery checks. Phase 11 (Documentation and generated reports) is the
+final project phase; its diagram and report copies are prepared. Account ownership, external team-information
 submission, and signature authenticity cannot be established by these automated
 tests. This verification used no live Mastodon API requests and did not restart or
 stop the developer's running server.

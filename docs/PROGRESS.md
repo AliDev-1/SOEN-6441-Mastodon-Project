@@ -1,5 +1,6 @@
 # Implementation progress
 
+The project concludes with Phase 11 (Documentation and generated reports).
 Each phase includes relevant tests and documentation. The assistant stops after
 each phase for review. Nabeel Ali commits and pushes manually before the next phase.
 
@@ -16,10 +17,9 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | 9 | Streams word analysis and statistics page | Committed by Nabeel as `689e944` | `feat: add word frequency statistics with streams` |
 | 10 | Coverage completion and full-flow verification | Committed by Nabeel as `21eebbb` | `test: complete branch coverage and failure cases` |
 | 11 | Final documentation, diagram, generated Javadoc | Prepared and verified; awaiting manual commit | `docs: complete design testing and API documentation` |
-| 12 | Clean-checkout verification, package, demo rehearsal | Not started | `chore: prepare delivery one submission` |
 
 The handoffs below are historical snapshots, not the current feature status.
-See the table above and [DELIVERY.md](DELIVERY.md) for remaining work.
+See the table above and [REQUIREMENTS.md](REQUIREMENTS.md) for remaining work.
 
 ## Phase 1 — Requirements and setup: handoff
 
@@ -179,12 +179,13 @@ instructions have been prepared. Record their actual completion separately.
 - Updated README, setup, design, testing, verification, requirements and progress
   documents to distinguish implemented features from historical phase notes.
 - Added the architecture diagram, route/component overview, Delivery 2 extension
-  discussion, report regeneration instructions, and delivery/demo checklist.
+  discussion and report regeneration instructions.
 - Updated the AI disclosure: all documentation had AI assistance; named every phase;
-  recorded Nabeel's description of his contribution and 60 prompts transcribed from
+  recorded Nabeel's description of his contribution and 55 prompts transcribed from
   his supplied screenshot, grouped in phase order with the source identified.
 - Regenerated Javadoc and coverage with 88 passing tests and 100% measured coverage;
   copied reports to `docs/generated/` and verified file copies and local links.
 - Generated reports are included; final archive inspection, clean-checkout verification,
-  external submissions, visual checks and the genuine originality form remain Phase 12 (Final delivery checks).
+  external submissions, visual checks and the genuine originality form remain
+  outstanding delivery checks, not an additional project phase.
 - No source behavior changes, commits, pushes, tags, or server restarts were performed.
