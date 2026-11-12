@@ -23,7 +23,7 @@ import static play.test.Helpers.*;
 
 /**
  * Exercises search routing, rendering and asynchronous errors without live HTTP.
- * <p>AI assistance: test-design support for the Phase 6 search interface.</p>
+ * <p>AI assistance: test-design support for the Phase 6 search interface and Phase 7 pagination.</p>
  * @author Nabeel Ali
  */
 public class SearchControllerTest extends WithApplication {
@@ -33,7 +33,9 @@ public class SearchControllerTest extends WithApplication {
     /** Creates the isolated test fixture.
      * @author Nabeel Ali
      */
-    public SearchControllerTest() { }
+    public SearchControllerTest() {
+        when(searches.previousPageId(any(SearchPage.class))).thenReturn("");
+    }
 
     /** Replaces the service before Play constructs the controller.
      * @return the isolated application
@@ -157,4 +159,98 @@ public class SearchControllerTest extends WithApplication {
         });
     }
 
+    /** Follows rendered pagination links through the real service and a mocked API.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void followsOlderAndPreviousLinksWithoutDuplicateRequests() {
+        services.MastodonClient client = mock(services.MastodonClient.class);
+        Post firstPost = new Post("opaque:last", "Author", "author", Instant.EPOCH, "en", "Text", "https://example.org/1", "public");
+        when(client.fetchPosts("java", "")).thenReturn(CompletableFuture.completedFuture(List.of(firstPost)));
+        when(client.fetchPosts("java", "opaque:last")).thenReturn(CompletableFuture.completedFuture(List.of()));
+        Application integrated = new GuiceApplicationBuilder()
+                .overrides(bind(services.MastodonClient.class).toInstance(client)).build();
+        running(integrated, () -> {
+            Result first = route(integrated, new Http.RequestBuilder().method("GET").uri("/search?hashtag=java"));
+            Document initial = Jsoup.parse(contentAsString(first));
+            assertTrue(initial.select(".previous-page, .first-page").isEmpty());
+            assertEquals(List.of("Page 1", "Page 1"), initial.select(".page-number").eachText());
+            assertEquals(2, initial.select("nav.page-navigation").size());
+            String nextUrl = initial.selectFirst(".older-page").attr("href");
+            Result next = route(integrated, new Http.RequestBuilder().method("GET").uri(nextUrl));
+            assertEquals(303, next.status());
+            String cachedUrl = next.redirectLocation().orElseThrow();
+            Result empty = route(integrated, new Http.RequestBuilder().method("GET").uri(cachedUrl));
+            assertEquals(200, empty.status());
+            Document end = Jsoup.parse(contentAsString(empty));
+            assertTrue(end.select(".older-page").isEmpty());
+            assertEquals(List.of("Page 2", "Page 2"), end.select(".page-number").eachText());
+            assertEquals("← Previous page", end.selectFirst(".previous-page").text());
+            assertEquals("Open saved version of this page", end.selectFirst(".cached-page").text());
+            assertEquals(cachedUrl, end.selectFirst(".cached-page").attr("href"));
+            assertTrue(end.selectFirst(".cache-note").text().contains("same posts"));
+            assertEquals("No older posts were returned. You have reached the end of the available results.", end.getElementById("no-results").text());
+            assertEquals("/search?hashtag=java", end.selectFirst(".first-page").attr("href"));
+            String previousUrl = end.selectFirst(".previous-page").attr("href");
+            assertEquals(initial.selectFirst(".cached-page").attr("href"), previousUrl);
+            Result previous = route(integrated, new Http.RequestBuilder().method("GET").uri(previousUrl));
+            assertEquals(contentAsString(first), contentAsString(previous));
+            Result again = route(integrated, new Http.RequestBuilder().method("GET").uri(nextUrl));
+            assertEquals(cachedUrl, again.redirectLocation().orElseThrow());
+            verify(client, times(1)).fetchPosts("java", "");
+            verify(client, times(1)).fetchPosts("java", "opaque:last");
+            verifyNoMoreInteractions(client);
+        });
+    }
+
+    /** Checks both navigation failure paths retain safe status codes and messages.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void rendersNavigationFailures() {
+        when(searches.cachedPage("expired")).thenReturn(CompletableFuture.failedFuture(new MastodonException(410, "Please search again.")));
+        when(searches.olderPage("expired")).thenReturn(CompletableFuture.failedFuture(new MastodonException(410, "Please search again.")));
+        for (String url : List.of("/results/expired", "/results/expired/older")) {
+            Result result = route(app, new Http.RequestBuilder().method("GET").uri(url));
+            assertEquals(410, result.status());
+            assertEquals("Please search again.", Jsoup.parse(contentAsString(result)).selectFirst("[role=alert]").text());
+        }
+    }
+    /** Checks numbered URLs preserve position while navigating shared snapshots.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void preservesPageNumbersInLinks() {
+        Post post = new Post("last", "Author", "author", Instant.EPOCH, "en", "Text", "https://example.org/1", "public");
+        SearchPage page = new SearchPage("third", "java", "cursor", List.of(post));
+        when(searches.cachedPage("third")).thenReturn(CompletableFuture.completedFuture(page));
+        when(searches.previousPageId(page)).thenReturn("second");
+        when(searches.olderPage("third")).thenReturn(CompletableFuture.completedFuture(new SearchPage("fourth", "java", "last", List.of())));
+        Result result = route(app, new Http.RequestBuilder().method("GET").uri("/results/third?pageNumber=3"));
+        Document doc = Jsoup.parse(contentAsString(result));
+        assertEquals(List.of("Page 3", "Page 3"), doc.select(".page-number").eachText());
+        assertEquals("/results/second?pageNumber=2", doc.selectFirst(".previous-page").attr("href"));
+        assertEquals("/results/third?pageNumber=3", doc.selectFirst(".cached-page").attr("href"));
+        assertEquals("Next page · Older posts →", doc.selectFirst(".older-page").text());
+        Result next = route(app, new Http.RequestBuilder().method("GET").uri(doc.selectFirst(".older-page").attr("href")));
+        assertEquals("/results/fourth?pageNumber=4", next.redirectLocation().orElseThrow());
+        // A missing predecessor disables backward navigation while keeping the position.
+        when(searches.previousPageId(page)).thenReturn("");
+        Result detached = route(app, new Http.RequestBuilder().method("GET").uri("/results/third?pageNumber=3"));
+        assertTrue(Jsoup.parse(contentAsString(detached)).select("a.previous-page").isEmpty());
+    }
+
+    /** Rejects invalid display numbers without touching cached or external data.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void rejectsInvalidPageNumbers() {
+        for (String number : List.of("0", "-1", "2147483647", "not-a-number")) {
+            for (String path : List.of("/results/id", "/results/id/older")) {
+                Result result = route(app, new Http.RequestBuilder().method("GET").uri(path + "?pageNumber=" + number));
+                assertEquals(400, result.status());
+            }
+        }
+        verifyNoInteractions(searches);
+    }
 }

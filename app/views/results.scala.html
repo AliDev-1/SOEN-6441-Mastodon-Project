@@ -1,12 +1,17 @@
-@(page: models.SearchPage)
+@(page: models.SearchPage, previousId: String, pageNumber: Int)
 @layout("Search results") {
     <h1>Results for #@page.getHashtag()</h1>
     @searchForm(page.getHashtag())
+    @pagination(page, previousId, pageNumber, "top")
     @* Display only escaped text and validated original links from the domain model. *@
     <section aria-label="Search results" data-snapshot="@page.getId()">
         <p class="result-count">@page.getPosts().size() posts on this page (up to 40).</p>
         @if(page.getPosts().isEmpty()) {
-            <p class="notice" id="no-results">No posts found for this hashtag. Try another hashtag.</p>
+            @if(page.getCursor().isEmpty()) {
+                <p class="notice" id="no-results">No posts found for this hashtag. Try another hashtag.</p>
+            } else {
+                <p class="notice" id="no-results">No older posts were returned. You have reached the end of the available results.</p>
+            }
         } else {
             @for(post <- page.getPosts()) {
                 <article class="post">
@@ -27,4 +32,5 @@
             }
         }
     </section>
+    @pagination(page, previousId, pageNumber, "bottom")
 }

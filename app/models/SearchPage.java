@@ -5,7 +5,7 @@ import java.util.Objects;
 
 /**
  * An immutable snapshot shared by result display and later analyses.
- * <p>AI assistance: implementation support for Phase 5 cached page values.</p>
+ * <p>AI assistance: implementation support for Phase 5 cached page values and Phase 7 pagination.</p>
  * @author Nabeel Ali
  */
 public final class SearchPage {
@@ -57,4 +57,17 @@ public final class SearchPage {
      * @author Nabeel Ali
      */
     public List<Post> getPosts() { return posts; }
+    /**
+     * Returns the last post ID as the older-page cursor, unless no progress is possible.
+     * @return an opaque cursor, or an empty string when navigation should stop
+     * @author Nabeel Ali
+     */
+    public String getNextCursor() {
+        // Never infer exhaustion from a short page or convert opaque IDs to numbers.
+        if (posts.isEmpty()) {
+            return "";
+        }
+        String next = posts.getLast().getId();
+        return next.equals(cursor) ? "" : next;
+    }
 }

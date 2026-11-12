@@ -123,6 +123,29 @@ unavailable. The existing localhost server returned a missing-dependency compile
 error; a restart is needed to pick up Phase 5's build changes. Tests use newly
 constructed applications with the current dependencies and no live Mastodon calls.
 
+## Phase 7 cases
+
+| Partition | Expected result |
+| --- | --- |
+| Empty, short, full, opaque-ID, nonadvancing page | Empty cursor only for empty/nonadvancing pages; otherwise exact final ID |
+| Multiple older requests from the same source | Same cached snapshot and one client request per cursor |
+| Multi-page predecessor chain | Same-hashtag predecessors found without fetching |
+| Other hashtag, unmatched cursor, expired predecessor | No predecessor link |
+| Missing/expired source snapshot | 410 before any API request |
+| Older request from an empty source | 400 without another client call |
+| Rendered older link, redirect, and cached-page route | 303 then 200, distinct empty older-page message |
+| Previous cached link and repeated older link | Exact original HTML and no duplicate client calls |
+| Both navigation actions fail | Controlled error page and appropriate status |
+
+`SearchPageTest` covers cursor boundaries. `SearchServiceTest` uses its fake clock
+for expiry and verifies exact calls. `SearchControllerTest` follows rendered links
+through real routing and caching with a mocked Mastodon client. Phase 7, including navigation refinements, passed 64
+tests, 100% line/method/branch coverage of handwritten production code, and Javadoc.
+Numbered-navigation tests verify the top and bottom page indicators, position
+preservation in previous/next/saved links, disabled unavailable actions, explanatory
+labels, and rejection of invalid numbers before service access.
+No live API requests or browser visual verification were performed in this phase.
+
 ## Coverage rules
 
 JaCoCo measures all compiled application classes except compiler-generated routes,

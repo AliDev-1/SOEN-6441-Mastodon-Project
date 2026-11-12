@@ -144,9 +144,48 @@ A GET form makes search URLs bookmarkable. Error forms retain the submitted term
 Responsive styles, explicit labels, visible focus indicators, and an alert role
 make the basic interface usable with keyboard navigation and narrow screens.
 
+## Cursor pagination and cached navigation
+
+`SearchPage.getNextCursor()` returns the last post ID without numeric conversion.
+An empty page or an ID equal to the requested cursor returns an empty cursor,
+preventing a nonadvancing link. A page with fewer than 40 posts is not assumed to
+be the last page. `SearchService.olderPage(id)` first requires the source snapshot
+to remain cached, then searches the same hashtag with that cursor. Requests retain
+`limit=40`; `max_id` selects older results according to the
+[Mastodon hashtag timeline API](https://docs.joinmastodon.org/methods/timelines/#view-hashtag-timeline).
+
+`GET /results/:id/older` redirects to `GET /results/:id` for the resulting snapshot.
+The cached route renders the exact retained posts and never refreshes missing data.
+A missing or expired snapshot returns 410; manually requesting an older page from
+an empty/nonadvancing source returns 400. Upstream failures use the existing safe
+error UI. Cursor values are derived on the server rather than accepted from a
+pagination link, and no upstream Link URL is followed.
+
+The service finds a predecessor among completed, unexpired pages with the same
+hashtag whose final post ID matches the current page's requested cursor. This
+supports successive backward navigation without storing a separate history or
+changing shared snapshots. The predecessor link disappears when that page is no
+longer retained; a link that expires after rendering returns 410. Matching by cursor
+can select a newer retained predecessor if the original query was refreshed; the
+chosen link always identifies its exact snapshot. The **First page** link runs the
+initial search, reusing its cache entry when available. Page numbers are carried as navigation context in the `pageNumber` query parameter,
+starting at 1, incrementing for older results, and decrementing for previous links.
+They describe the browsing sequence rather than a global position in the changing
+remote timeline. They are deliberately separate from cache keys so callers at
+different browsing positions can reuse the same response. Saved-page links preserve
+the number; old snapshot URLs without it default to page 1. Invalid/nonpositive
+numbers are rejected, and integer overflow is prevented. No total page count is
+claimed or fetched.
+
+The shared pagination template appears above and below results. Previous/next
+buttons surround the current page number; first-page and saved-page utilities sit
+on a separate row. A short note explains that the saved link revisits the same
+posts temporarily. Unavailable actions remain visible as disabled text. On narrow
+screens the page number appears above the navigation buttons.
+
 ## Subsequent components
 
-Phase 7 adds cursor navigation. Later readability
+Later readability
 and word-statistics features will consume `cachedPage` snapshots, with analysis
 explicitly limited to the displayed page. Those UI and analysis paths are not yet
 implemented; cache reuse between actual pages remains to be verified then.

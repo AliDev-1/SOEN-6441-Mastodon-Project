@@ -26,6 +26,7 @@ copies of the complete conversation:
 | 4 | Implement the asynchronous REST client, error handling, mocked tests, and a separate live connection check. | Implementation and test-design assistance for requests, configuration, safe errors, dependency injection, and documentation; a live smoke check without displaying credentials. |
 | 5 | Implement validation and a bounded asynchronous cache after the Phase 4 commit. | Implementation and test-design assistance for normalized inputs, shared loads, snapshot expiry, failure recovery, and documentation. |
 | 6 | Connect cached searches to the controller, routes, templates, and error UI. | Implementation and test-design assistance for search forms, escaped metadata display, asynchronous error handling, responsive styles, integration tests, and documentation. |
+| 7 | Implement cursor pagination and cached page navigation after the Phase 6 commit. | Implementation and test-design assistance for opaque cursors, snapshot routes, predecessor lookup, pagination UI, expiry/error cases, and documentation; follow-up assistance for clearer labels, placement, and numbered navigation. |
 
 ## Ongoing disclosure
 

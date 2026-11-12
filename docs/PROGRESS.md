@@ -10,8 +10,8 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | 3 | Domain classes, JSON mapping, readable text | Committed by Nabeel as `9f8d7c2` | `feat: add post model and response mapping` |
 | 4 | Asynchronous REST client and error handling | Committed by Nabeel as `19bcc6b` | `feat: retrieve Mastodon hashtag posts asynchronously` |
 | 5 | Validation and shared bounded cache | Committed by Nabeel as `8359f87` | `feat: validate and cache hashtag searches` |
-| 6 | Search controller, routes, templates, error UI | Implemented and verified; awaiting manual commit | `feat: display searchable Mastodon results` |
-| 7 | Cursor pagination and cached page navigation | Not started | `feat: paginate cached hashtag results` |
+| 6 | Search controller, routes, templates, error UI | Committed by Nabeel as `19a2cb4` | `feat: display searchable Mastodon results` |
+| 7 | Cursor pagination and cached page navigation | Implemented and verified; awaiting manual commit | `feat: paginate cached hashtag results` |
 | 8 | Readability scores and post details page | Not started | `feat: add post readability and details` |
 | 9 | Streams word analysis and statistics page | Not started | `feat: add word frequency statistics with streams` |
 | 10 | Coverage completion and full-flow verification | Not started | `test: complete branch coverage and failure cases` |
@@ -105,3 +105,26 @@ instructions have been prepared. Record their actual completion separately.
 - `sbt test jacoco javadoc` passed: 57 tests, 100% line/method/branch coverage
   across handwritten production code, and successful Javadoc generation.
 - Pagination controls and analyses remain later phases. No commit or push was made.
+
+## Phase 7 handoff
+
+- Added older-page requests derived from the last post's opaque ID, with the existing
+  40-post limit and cache key separating each cursor.
+- Added cached snapshot routes, stable page links, predecessor links, and a first-page link.
+- Short pages still allow older requests; empty or nonadvancing pages stop navigation.
+  Empty older results have a distinct end-of-results message.
+- Cached predecessor navigation never calls the API. Expired source snapshots fail
+  with 410 before any older request; failed API loads retain their safe error response.
+- `sbt test jacoco javadoc` passed: 64 tests, 100% line/method/branch coverage across
+  handwritten production code, and successful Javadoc generation.
+- Route tests follow rendered links using the real cache and a mocked API; no live
+  API calls were made. Browser visual verification remains pending.
+- No commit, push, tag, or server restart was performed.
+
+### Phase 7 navigation refinement
+
+- Kept all four actions with clearer labels and separate browsing/utility rows.
+- Repeated navigation above and below results, showing the current page number.
+- Page numbers travel with navigation links without fragmenting the shared cache.
+- Added saved-link explanation and visible disabled states for unavailable actions.
+- Expanded route checks for numbered links, invalid numbers, and layout content.

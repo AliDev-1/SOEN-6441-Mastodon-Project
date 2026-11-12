@@ -15,7 +15,7 @@ import models.SearchPage;
 
 /**
  * Shares asynchronous page requests and retains bounded, expiring snapshots.
- * <p>AI assistance: implementation support for Phase 5 validation and caching.</p>
+ * <p>AI assistance: implementation support for Phase 5 validation and caching; Phase 7 cached navigation.</p>
  * @author Nabeel Ali
  */
 @Singleton
@@ -96,5 +96,42 @@ public final class SearchService {
         }
         return CompletableFuture.failedFuture(new MastodonException(410,
                 "These search results have expired. Please search again."));
+    }
+    /**
+     * Retrieves older posts using the exact cached source page's final post ID.
+     * @param id the source snapshot identifier
+     * @return a cached or newly retrieved older page
+     * @author Nabeel Ali
+     */
+    public CompletionStage<SearchPage> olderPage(String id) {
+        // Expired source pages fail before any replacement query can be issued.
+        return cachedPage(id).thenCompose(page -> {
+            String cursor = page.getNextCursor();
+            if (cursor.isEmpty()) {
+                return CompletableFuture.failedFuture(new MastodonException(400,
+                        "There are no older posts to request from this page. Please search again."));
+            }
+            return search(page.getHashtag(), cursor);
+        });
+    }
+
+    /**
+     * Finds a still-cached predecessor using the cursor relationship, without fetching.
+     * @param page the displayed snapshot
+     * @return the predecessor snapshot ID, or an empty string if unavailable
+     * @author Nabeel Ali
+     */
+    public String previousPageId(SearchPage page) {
+        if (page.getCursor().isEmpty()) {
+            return "";
+        }
+        // Both pages must belong to the same hashtag in this instance's cache.
+        for (SearchPage candidate : pages.synchronous().asMap().values()) {
+            if (candidate.getHashtag().equals(page.getHashtag())
+                    && candidate.getNextCursor().equals(page.getCursor())) {
+                return candidate.getId();
+            }
+        }
+        return "";
     }
 }

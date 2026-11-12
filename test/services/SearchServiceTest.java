@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Checks validation, shared loads, snapshot identity and bounded retention.
- * <p>AI assistance: test-design support for Phase 5 cache behavior.</p>
+ * <p>AI assistance: test-design support for Phase 5 cache behavior and Phase 7 pagination.</p>
  * @author Nabeel Ali
  */
 public class SearchServiceTest {
@@ -192,6 +192,59 @@ public class SearchServiceTest {
         assertFailure(service.search("java", null), 503);
         assertTrue(service.search("java", null).toCompletableFuture().join().getPosts().isEmpty());
         verify(client, times(2)).fetchPosts("java", "");
+    }
+
+    /** Checks cursor selection, shared older requests and cached predecessor navigation.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void navigatesCachedPages() {
+        when(client.fetchPosts("java", "")).thenReturn(CompletableFuture.completedFuture(List.of(post("newest"), post("opaque:id+1"))));
+        when(client.fetchPosts("java", "opaque:id+1")).thenReturn(CompletableFuture.completedFuture(List.of(post("last"))));
+        when(client.fetchPosts("java", "last")).thenReturn(CompletableFuture.completedFuture(List.of()));
+        SearchPage first = service.search("java", null).toCompletableFuture().join();
+        SearchPage second = service.olderPage(first.getId()).toCompletableFuture().join();
+        assertEquals("opaque:id+1", second.getCursor());
+        assertSame(second, service.olderPage(first.getId()).toCompletableFuture().join());
+        assertEquals("", service.previousPageId(first));
+        assertEquals(first.getId(), service.previousPageId(second));
+        SearchPage end = service.olderPage(second.getId()).toCompletableFuture().join();
+        assertTrue(end.getPosts().isEmpty());
+        assertEquals(second.getId(), service.previousPageId(end));
+        assertFailure(service.olderPage(end.getId()), 400);
+        assertFailure(service.olderPage("missing"), 410);
+        verify(client, times(1)).fetchPosts("java", "");
+        verify(client, times(1)).fetchPosts("java", "opaque:id+1");
+        verify(client, times(1)).fetchPosts("java", "last");
+        verifyNoMoreInteractions(client);
+    }
+
+    /** Checks unavailable and unrelated predecessor snapshots, and source expiry.
+     * @author Nabeel Ali
+     */
+    @Test
+    public void doesNotRefetchExpiredNavigation() {
+        when(client.fetchPosts("other", "")).thenReturn(CompletableFuture.completedFuture(List.of(post("shared"))));
+        when(client.fetchPosts("java", "")).thenReturn(CompletableFuture.completedFuture(List.of(post("shared"))));
+        service.search("other", null).toCompletableFuture().join();
+        assertEquals("", service.previousPageId(new SearchPage("detached", "java", "shared", List.of())));
+        SearchPage first = service.search("java", null).toCompletableFuture().join();
+        assertEquals("", service.previousPageId(new SearchPage("unmatched", "java", "absent", List.of())));
+        clock.set(Duration.ofMinutes(10).toNanos());
+        assertEquals("", service.previousPageId(new SearchPage("expired-parent", "java", "shared", List.of())));
+        assertFailure(service.olderPage(first.getId()), 410);
+        verify(client, times(1)).fetchPosts("java", "");
+        verify(client, times(1)).fetchPosts("other", "");
+        verifyNoMoreInteractions(client);
+    }
+
+    /** Creates a synthetic post with an opaque identifier.
+     * @param id the post identifier
+     * @return a test post
+     * @author Nabeel Ali
+     */
+    private static Post post(String id) {
+        return new Post(id, "Author", "author", java.time.Instant.EPOCH, "en", "Text", "https://example.org/post", "public");
     }
 
     /** Checks a controlled asynchronous error.

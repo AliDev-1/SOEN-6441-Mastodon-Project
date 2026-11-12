@@ -2,6 +2,7 @@ package controllers;
 
 import jakarta.inject.Inject;
 import services.SearchService;
+import models.SearchPage;
 import services.MastodonException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletableFuture;
@@ -13,7 +14,7 @@ import play.mvc.Result;
  * Handles browser requests and delegates application work to services.
  *
  * <p>AI assistance: implementation support for the Phase 2 request for one
- * asynchronous controller and a tested home page; Phase 6 search and error UI.</p>
+ * asynchronous controller and a tested home page; Phase 6 search and error UI; Phase 7 pagination.</p>
  *
  * @author Nabeel Ali
  */
@@ -53,8 +54,60 @@ public class ApplicationController extends Controller {
     public CompletionStage<Result> search(String hashtag) {
         // Service validation, caching and HTTP work remain outside the controller.
         return searches.search(hashtag, null)
-                .thenApply(page -> ok(views.html.results.render(page)))
+                .thenApply(page -> renderPage(page, 1))
                 .exceptionally(failure -> searchError(hashtag, failure));
+    }
+
+    /**
+     * Displays an exact cached page without issuing a new API request.
+     * @param id the snapshot identifier
+     * @param pageNumber the position in this browsing sequence
+     * @return the cached result page or an expiry error
+     * @author Nabeel Ali
+     */
+    public CompletionStage<Result> cached(String id, int pageNumber) {
+        if (invalidPageNumber(pageNumber)) {
+            return CompletableFuture.completedFuture(searchError("", new MastodonException(400, "Invalid page number. Please search again.")));
+        }
+        return searches.cachedPage(id).thenApply(page -> renderPage(page, pageNumber))
+                .exceptionally(failure -> searchError("", failure));
+    }
+
+    /**
+     * Loads older results and redirects to their stable cached-page URL.
+     * @param id the source snapshot identifier
+     * @param pageNumber the current position in this browsing sequence
+     * @return a redirect to the older snapshot or a safe error
+     * @author Nabeel Ali
+     */
+    public CompletionStage<Result> older(String id, int pageNumber) {
+        if (invalidPageNumber(pageNumber)) {
+            return CompletableFuture.completedFuture(searchError("", new MastodonException(400, "Invalid page number. Please search again.")));
+        }
+        return searches.olderPage(id)
+                .thenApply(page -> redirect(routes.ApplicationController.cached(page.getId(), pageNumber + 1)))
+                .exceptionally(failure -> searchError("", failure));
+    }
+
+    /**
+     * Renders results with a predecessor link only while that snapshot is cached.
+     * @param page the completed result snapshot
+     * @param pageNumber the position shown in the navigation
+     * @return the successful HTML response
+     * @author Nabeel Ali
+     */
+    private Result renderPage(SearchPage page, int pageNumber) {
+        return ok(views.html.results.render(page, searches.previousPageId(page), pageNumber));
+    }
+
+    /**
+     * Rejects invalid positions and prevents overflow when advancing a page.
+     * @param pageNumber the requested display position
+     * @return whether the page number cannot be used
+     * @author Nabeel Ali
+     */
+    private boolean invalidPageNumber(int pageNumber) {
+        return pageNumber < 1 || pageNumber == Integer.MAX_VALUE;
     }
 
     /**

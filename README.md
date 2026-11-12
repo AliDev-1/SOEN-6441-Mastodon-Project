@@ -5,11 +5,10 @@ Mastodon hashtag posts and display them with readability scores and word statist
 
 ## Current status
 
-Phase 6 connects the search service to the browser. Search by hashtag to see up to
-40 posts with author, publication time, language, readable content, visibility, and
-original links. Invalid input and API failures show useful errors; empty searches
-show a no-results message. Results reuse the Phase 5 cache. Pagination controls,
-readability, and word statistics follow in later phases.
+Phase 7 adds numbered navigation, **Previous page**, **Next page · Older posts**,
+**Back to first page**, and **Open saved version of this page**. Searches show up to 40 posts per page with all required metadata.
+Navigation reuses cached results; expired snapshot links explain that a new search
+is needed. Readability and word statistics follow in later phases.
 
 ## Run locally
 
@@ -44,7 +43,13 @@ See [testing notes](docs/TESTING.md) for the current test cases and coverage rul
    click **Search posts**. Searches can be bookmarked at `/search?hashtag=java`.
 3. Read the first page of results or follow **View original post**. Publication
    times are UTC. No-text posts display a clear placeholder.
-4. Correct invalid input or retry after an API error. Repeated normalized searches
+4. Use the navigation above or below results: **Previous page** goes back, while
+   **Next page · Older posts** advances. The current position is shown as **Page 1**,
+   **Page 2**, and so on; no total is implied. Unavailable actions are disabled.
+   **Back to first page** repeats the initial search.
+5. **Open saved version of this page** preserves the exact displayed snapshot while it is
+   retained. Expired or evicted snapshot links return 410 and ask for a new search.
+6. Correct invalid input or retry after an API error. Repeated normalized searches
    reuse cached results for ten minutes, subject to the 100-page retention limit.
 
 After dependency changes (including Phase 5's Caffeine addition), stop the existing
@@ -53,8 +58,6 @@ old build dependencies.
 
 ## Planned features
 
-- Hashtag search with readable post content and required metadata.
-- Additional results through Mastodon cursor pagination, at most 40 posts per request.
 - Cached results shared by the search and analysis pages.
 - Flesch Reading Ease and Flesch–Kincaid Grade Level, with a post details page.
 - A linked word-frequency page implemented with Java Streams.

@@ -1,0 +1,28 @@
+@(page: models.SearchPage, previousId: String, pageNumber: Int, location: String)
+@* Page numbers describe the browsing sequence; snapshot IDs identify the saved posts. *@
+<nav class="page-navigation" aria-label="Result pages (@location)">
+    <div class="pagination">
+        @if(!previousId.isEmpty() && pageNumber > 1) {
+            <a class="previous-page page-button" href="@routes.ApplicationController.cached(previousId, pageNumber - 1)">← Previous page</a>
+        } else {
+            <span class="page-button unavailable" aria-disabled="true">← Previous page</span>
+        }
+        <span class="page-number" aria-current="page">Page @pageNumber</span>
+        @if(!page.getNextCursor().isEmpty()) {
+            <a class="older-page page-button" href="@routes.ApplicationController.older(page.getId(), pageNumber)">Next page · Older posts →</a>
+        } else {
+            <span class="page-button unavailable" aria-disabled="true">No older posts</span>
+        }
+    </div>
+    <div class="page-tools">
+        @if(pageNumber > 1) {
+            <a class="first-page" href="@routes.ApplicationController.search(page.getHashtag())">Back to first page</a>
+        } else {
+            <span class="unavailable" aria-disabled="true">Back to first page</span>
+        }
+        <div class="saved-page-tool">
+            <a class="cached-page" href="@routes.ApplicationController.cached(page.getId(), pageNumber)" aria-describedby="saved-page-help-@location">Open saved version of this page</a>
+            <p class="cache-note" id="saved-page-help-@location">Copy this link to revisit these same posts. Available for up to 10 minutes; it may expire sooner.</p>
+        </div>
+    </div>
+</nav>

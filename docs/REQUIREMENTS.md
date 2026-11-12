@@ -19,7 +19,7 @@ choices are distinguished from assignment requirements below.
 - [x] Hashtag input without `#`, using the direct `/api/v1/timelines/tag/{hashtag}` API without a Mastodon wrapper (4.1–4.2).
 - [x] No more than 40 posts requested at a time (4.1); enforced by the Phase 4 client.
 - [x] Author, date/time, language, readable content, original link, and visibility displayed (4.2).
-- [ ] API pagination for additional results (5.1).
+- [x] API pagination for additional results (5.1); Phase 7 routes use the last post ID as `max_id`, with cached navigation.
 - [ ] Cached data reused between searches and individual analyses (5.3).
 - [ ] Meaningful errors and appropriate status codes for invalid input, API unavailability, HTTP/authentication errors, and malformed data (5.2).
 - [x] Empty successful searches display a clear no-results state (5.2).
