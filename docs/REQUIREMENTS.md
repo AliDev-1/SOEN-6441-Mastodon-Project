@@ -15,16 +15,16 @@ choices are distinguished from assignment requirements below.
 - [ ] Dedicated project Mastodon account and registered application, user token with `read:statuses` (section 3).
 - [ ] External instance/token configuration; no credentials in source, Git history, or submission (sections 3 and 9).
 - [ ] Java Play application built and run through sbt; dependencies resolved automatically (5.3).
-- [ ] Single application controller, with business logic in dedicated classes (5.3).
+- [x] Single application controller, with business logic in dedicated classes (5.3).
 - [x] Hashtag input without `#`, using the direct `/api/v1/timelines/tag/{hashtag}` API without a Mastodon wrapper (4.1–4.2).
 - [x] No more than 40 posts requested at a time (4.1); enforced by the Phase 4 client.
 - [x] Author, date/time, language, readable content, original link, and visibility displayed (4.2).
 - [x] API pagination for additional results (5.1); Phase 7 routes use the last post ID as `max_id`, with cached navigation.
 - [x] Cached data reused between searches and individual analyses (5.3); verified by readability and statistics route tests.
-- [ ] Meaningful errors and appropriate status codes for invalid input, API unavailability, HTTP/authentication errors, and malformed data (5.2).
+- [x] Meaningful errors and appropriate status codes for invalid input, API unavailability, HTTP/authentication errors, and malformed data (5.2).
 - [x] Empty successful searches display a clear no-results state (5.2).
-- [ ] All controller actions asynchronous; no blocking future waits or sleeps in production code (5.5).
-- [ ] No application actors, WebSockets, streaming API, or reactive streams (sections 1 and 7).
+- [x] All controller actions asynchronous; no blocking future waits or sleeps in production code (5.5).
+- [x] No application actors, WebSockets, streaming API, or reactive streams (sections 1 and 7).
 - [x] Domain posts independent of REST transport, allowing future Delivery 2 adaptation (8); implemented in Phase 3.
 
 
@@ -37,20 +37,24 @@ choices are distinguished from assignment requirements below.
 - [x] Use Java Streams for word-content processing (4.3).
 
 The assignment's term “overview's description” is interpreted as post content in
-the results overview. Both scores will appear there and on the details page.
+the results overview. Both scores appear there and on the details page.
 
 ## Testing and code documentation
 
-- [ ] Write JUnit tests alongside every production class and controller action (5.6).
-- [ ] Mock the API with Mockito or a factory-generated mock; no live API unit tests (5.6).
-- [ ] Document equivalence partitions and assert exact results (5.6).
-- [ ] Achieve 100% branch coverage of handwritten production code with JaCoCo (5.6).
+- [x] Write JUnit tests alongside every production class and controller action (5.6).
+- [x] Mock the API with Mockito or a factory-generated mock; no live API unit tests (5.6).
+- [x] Document equivalence partitions and assert exact results (5.6).
+- [x] Achieve 100% branch coverage of handwritten production code with JaCoCo (5.6).
 - [x] Verify `sbt run`, `sbt test`, `sbt jacoco`, `sbt javadoc`, and `sbt clean` (5.3); verified for the Phase 2 skeleton and to be rechecked for final submission.
-- [ ] Javadoc every class, constructor, and method, including private methods and tests (5.4).
-- [ ] Include `@author` on all classes and methods (5.4).
-- [ ] Disclose GenAI assistance in affected class documentation and retain prompt provenance (5.4).
+- [x] Javadoc every class, constructor, and method, including private methods and tests (5.4).
+- [x] Include `@author` on all classes and methods (5.4).
+- [x] Disclose GenAI assistance in affected class documentation and retain prompt provenance (5.4).
 - [ ] Include generated HTML Javadoc covering private methods and tests (5.4).
-- [ ] Add concise explanatory comments above logical code blocks (developer preference).
+- [x] Add concise explanatory comments above logical code blocks (developer preference).
+
+Verified implementation/test items above are supported by the
+[Phase 10 verification record](VERIFICATION.md). Final packaging and external
+submission items remain separate checks.
 
 ## Submission and demonstration
 

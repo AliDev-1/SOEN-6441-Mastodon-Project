@@ -5,11 +5,11 @@ Mastodon hashtag posts and display them with readability scores and word statist
 
 ## Current status
 
-Phase 9 adds word statistics for the displayed cached results, linked from the
-hashtag above the posts. The page shows total occurrences, unique words, and a
-frequency table. Search, numbered pagination, readability, and post details are
-implemented. Final verification, documentation packaging, and submission checks
-remain in Phases 10–12.
+Search, numbered pagination, readability, post details, and word statistics are
+implemented. Phase 10 verification passed 88 tests with 100% line, method, and
+branch coverage of handwritten production code. Full-flow tests mock only the
+outbound HTTP boundary. Final documentation and submission checks remain in
+Phases 11–12; see the [verification record](docs/VERIFICATION.md).
 
 ## Run locally
 

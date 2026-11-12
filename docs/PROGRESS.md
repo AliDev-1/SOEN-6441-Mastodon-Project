@@ -13,8 +13,8 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | 6 | Search controller, routes, templates, error UI | Committed by Nabeel as `19a2cb4` | `feat: display searchable Mastodon results` |
 | 7 | Cursor pagination and cached page navigation | Committed by Nabeel as `a433732` | `feat: paginate cached hashtag results` |
 | 8 | Readability scores and post details page | Committed by Nabeel as `fdc40ce` | `feat: add post readability and details` |
-| 9 | Streams word analysis and statistics page | Implemented and verified; awaiting manual commit | `feat: add word frequency statistics with streams` |
-| 10 | Coverage completion and full-flow verification | Not started | `test: complete branch coverage and failure cases` |
+| 9 | Streams word analysis and statistics page | Committed by Nabeel as `689e944` | `feat: add word frequency statistics with streams` |
+| 10 | Coverage completion and full-flow verification | Verified; awaiting manual commit | `test: complete branch coverage and failure cases` |
 | 11 | Final documentation, diagram, generated Javadoc | Not started | `docs: complete design testing and API documentation` |
 | 12 | Clean-checkout verification, package, demo rehearsal | Not started | `chore: prepare delivery one submission` |
 
@@ -157,3 +157,16 @@ instructions have been prepared. Record their actual completion separately.
   fourteen handwritten production classes, and successful Javadoc generation.
 - No live API call, commit, push, tag, or server restart was performed. Browser visual
   verification remains pending; route tests verify rendered HTML.
+
+## Phase 10 handoff
+
+- Added four full-flow integration tests with only the outbound Play WS boundary
+  mocked; JSON parsing, cache, controller, templates and analysis remain real.
+- Verified 40-post pages, older-page cursor handling, page-local analyses, no-refetch
+  navigation, safe upstream errors, failure retry, shared pending requests and expiry.
+- No production defect was found that required a behavior change.
+- `sbt test jacoco javadoc` passed: 88 tests; 286/286 lines, 146/146 branches and
+  55/55 methods covered across fourteen production classes.
+- Audited generated Javadoc: all 187 method/constructor detail sections include authors.
+- Added [the verification record](VERIFICATION.md), including remaining delivery checks.
+- No live API calls, commit, push, tag, or server restart was performed.

@@ -190,6 +190,19 @@ tests exercise the real analyzer and cache with a mocked client. Phase 9 passed
 84 tests with 100% line/method/branch coverage across fourteen handwritten production
 classes; Javadoc also passed. No live API or browser visual verification occurred.
 
+## Phase 10 full-flow verification
+
+`ApplicationFlowTest` mocks only Play WS and supplies synthetic JSON. It verifies
+that real mapping, caching, analysis, routing and rendering work together. Its
+four tests cover a 40-post first page and an older page, both analyses and return
+navigation, upstream/malformed/oversized responses and retry, pending-request
+sharing, and fake-clock expiry of every cached route without silent refetching.
+
+Phase 10 passed 88 tests. Coverage remains 100%: 286 lines, 146 branches, and
+55 methods across fourteen handwritten production classes. Strict Javadoc passed,
+and all 187 generated method/constructor sections have rendered author entries.
+See [the verification record](VERIFICATION.md) for exact assertions and limits.
+
 ## Coverage rules
 
 JaCoCo measures all compiled application classes except compiler-generated routes,
