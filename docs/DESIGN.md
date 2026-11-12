@@ -1,9 +1,9 @@
 # Application design
 
-MAWA separates browser actions, data retrieval, and post analysis. Phase 3
-implements the post representation and the conversion boundary. The home controller
-does not call this boundary yet; the REST client and search service follow in later
-phases.
+MAWA separates browser actions, data retrieval, and post analysis. The current
+implementation includes post representation, JSON conversion, and an asynchronous
+REST client. The home controller does not fetch posts yet; the search service and
+UI follow in later phases.
 
 ## Domain model
 
@@ -57,9 +57,48 @@ For example, encoded angle brackets become literal text and must not be inserted
 through Twirl's raw-HTML helpers. The converter follows jsoup's
 [text extraction API](https://jsoup.org/apidocs/org/jsoup/nodes/Element.html#text()).
 
+## Asynchronous REST client
+
+`MastodonClient.fetchPosts(String hashtag, String maxId)` returns a
+`CompletionStage<List<Post>>`. Play injects its managed `WSClient`, configuration,
+and mapper into a singleton. The client sends one GET to
+`/api/v1/timelines/tag/{encodedHashtag}` with `limit=40` and an optional `max_id`.
+It makes no blocking waits or automatic retries. Cursor navigation and caching
+remain responsibilities of later phases. The endpoint and cursor behavior follow
+the [official timeline API](https://docs.joinmastodon.org/methods/timelines/).
+
+The request uses an Authorization Bearer header, an Accept JSON header, and a
+ten-second timeout. Only configured HTTPS origins are accepted, and redirects are
+disabled to keep authorization on that origin. The origin cannot contain user
+credentials, an API path, query, or fragment. Configuration is captured when the
+client is created; changes require restarting the application.
+
+Null or blank hashtags produce a failed stage with status 400. Full input rules
+will be enforced by the search service. Nonempty tags are encoded as one path
+segment; cursors are passed separately through the HTTP client's query API.
+
+HTTP 200 responses are mapped through `MastodonPostMapper`. Empty arrays are valid;
+malformed responses and responses exceeding 40 posts are rejected. Error response
+bodies are not read. `MastodonException` carries controlled messages without raw
+exceptions, response bodies, or credentials. Future controller actions will use
+its status code to render an appropriate error page.
+
+| Condition | Application status |
+| --- | --- |
+| Missing or blank hashtag | 400 |
+| Missing or invalid instance/token configuration | 503 |
+| Upstream 401 or 403 | 502 with an authentication explanation |
+| Upstream 429 | 503 with a rate-limit explanation |
+| Upstream 503 or a connection failure | 503 |
+| Upstream 504 or a transport timeout | 504 |
+| Other upstream status or malformed/oversized data | 502 |
+
+Upstream authentication failures do not return 401 to the browser because the
+credentials belong to the server configuration, not a browser login session.
+
 ## Subsequent components
 
-The REST client will use this mapper, and the search service will cache its domain
-values for reuse by display and analysis. Readability will calculate scores from
+The search service will cache the client's domain values for reuse by display
+and analysis. Readability will calculate scores from
 plain text. Word statistics will use Java Streams over the cached posts. Those
-analysis pipelines are planned, not implemented in Phase 3.
+analysis pipelines are planned, not implemented in Phase 4.

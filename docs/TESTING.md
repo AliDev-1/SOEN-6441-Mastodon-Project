@@ -40,6 +40,37 @@ so one error does not mask another. All JSON is synthetic; no credentials or liv
 responses are used. Phase 3 verification passed 28 tests and achieved 100% line,
 method, and branch coverage of the current handwritten production code.
 
+## Phase 4 cases
+
+`MastodonClientTest` mocks Play's `WSClient`, `WSRequest`, and `WSResponse` using
+Mockito. It uses dummy credentials and manually completed futures. Its dependency
+injection test also replaces the HTTP client with a mock. No unit test reads `.env`
+or calls Mastodon.
+
+| Partition | Expected result | Test |
+| --- | --- | --- |
+| Pending request, then empty success | Returns immediately; exact endpoint, headers, limit, timeout, redirect policy; empty list after completion | `sendsBoundedNonBlockingRequest` |
+| Unicode and reserved path characters; opaque cursor; trailing origin slash | Encoded tag and separate cursor query value | `encodesTagAndAddsCursor` |
+| Blank cursor | No `max_id` | `omitsBlankCursor` |
+| Null, empty, or whitespace hashtag | Failed stage, 400, no request | `rejectsAbsentTags` |
+| 1 and 40 posts | Exact counts and mapped field values | `mapsSuccessfulPages` |
+| Missing/malformed body or 41 posts | Safe 502 | `rejectsInvalidResponseData` |
+| 401, 403, 429, 503, 504, 500, 404, 302, 204 | Exact mapped status/message; no error-body access | `mapsHttpFailures` |
+| Direct and wrapped timeouts | Safe 504 | `mapsTimeoutFailures` |
+| Connection or synchronous request failure | Safe 503, no raw cause | `mapsConnectionFailures`, `mapsSynchronousFailures` |
+| Invalid origin components or missing settings | Safe 503 before network activity | `rejectsInvalidOrigins` |
+| Absent settings or blank token | Safe 503 before network activity | `rejectsMissingConfiguration` |
+| Guice-created client | Correct injection and singleton instance | `supportsDependencyInjection` |
+
+`MastodonExceptionTest` separately checks the error status, message, and absent
+cause. Phase 4 passed 42 tests with 100% line, method, and branch coverage of the
+current handwritten production code.
+
+A separate, temporary manual runner exercised the actual client using local
+configuration and successfully mapped 40 `java` posts. It printed only the count,
+closed its application, and was removed afterward. Live verification is separate
+from the reproducible automated test suite.
+
 ## Coverage rules
 
 JaCoCo measures all compiled application classes except compiler-generated routes,

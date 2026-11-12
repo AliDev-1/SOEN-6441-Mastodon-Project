@@ -17,7 +17,7 @@ choices are distinguished from assignment requirements below.
 - [ ] Java Play application built and run through sbt; dependencies resolved automatically (5.3).
 - [ ] Single application controller, with business logic in dedicated classes (5.3).
 - [ ] Hashtag input without `#`, using the direct `/api/v1/timelines/tag/{hashtag}` API without a Mastodon wrapper (4.1–4.2).
-- [ ] No more than 40 posts requested at a time (4.1).
+- [x] No more than 40 posts requested at a time (4.1); enforced by the Phase 4 client.
 - [ ] Author, date/time, language, readable content, original link, and visibility displayed (4.2).
 - [ ] API pagination for additional results (5.1).
 - [ ] Cached data reused between searches and individual analyses (5.3).

@@ -7,8 +7,8 @@ each phase for review. Nabeel Ali commits and pushes manually before the next ph
 | --- | --- | --- | --- |
 | 1 | Requirements, allocation, exclusions, setup instructions | Repository preparation complete; external setup pending | `docs: record delivery one scope and setup` |
 | 2 | Play skeleton, tested home page, sbt quality tasks | Committed by Nabeel as `b584e2a` | `build: initialize Play app and quality tools` |
-| 3 | Domain classes, JSON mapping, readable text | Implemented and verified; awaiting manual commit | `feat: add post model and response mapping` |
-| 4 | Asynchronous REST client and error handling | Not started | `feat: retrieve Mastodon hashtag posts asynchronously` |
+| 3 | Domain classes, JSON mapping, readable text | Committed by Nabeel as `9f8d7c2` | `feat: add post model and response mapping` |
+| 4 | Asynchronous REST client and error handling | Implemented and verified; awaiting manual commit | `feat: retrieve Mastodon hashtag posts asynchronously` |
 | 5 | Validation and shared bounded cache | Not started | `feat: validate and cache hashtag searches` |
 | 6 | Search controller, routes, templates, error UI | Not started | `feat: display searchable Mastodon results` |
 | 7 | Cursor pagination and cached page navigation | Not started | `feat: paginate cached hashtag results` |
@@ -61,3 +61,19 @@ instructions have been prepared. Record their actual completion separately.
 - Nabeel reported configuring the token in `.env`. Its contents were not read or
   displayed, and authentication has not been verified yet.
 - No commit, push, tag, or change to the developer's running server was made.
+
+## Phase 4 handoff
+
+- Added an injectable singleton `MastodonClient` using Play WS and a safe
+  `MastodonException` carrying the intended application status and message.
+- Each request uses the configured HTTPS origin, a Bearer token, `limit=40`, an
+  optional `max_id`, a ten-second timeout, and disabled redirects.
+- Configuration, authentication, rate limiting, invalid data, upstream errors,
+  timeouts, and connection failures have controlled messages.
+- `sbt test jacoco javadoc` passed: 42 tests and 100% line, method, and branch
+  coverage across the current handwritten production code.
+- A separate temporary live runner called the actual client for `java` and mapped
+  40 posts successfully. It loaded local configuration without displaying secrets
+  or post contents. The runner was removed and is not part of the unit test suite.
+- The home page is unchanged; caching and the search UI are later phases.
+- No commit, push, or change to the developer's running server was made.

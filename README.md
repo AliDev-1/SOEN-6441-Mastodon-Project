@@ -5,9 +5,10 @@ Mastodon hashtag posts and display them with readability scores and word statist
 
 ## Current status
 
-Phase 3 adds an immutable post model, validated Mastodon JSON mapping, and readable
-HTML-to-text conversion. The home page still shows the application foundation;
-live API requests, hashtag search, and analysis are not implemented yet.
+Phase 4 adds an asynchronous Mastodon client with a 40-post request limit,
+timeouts, and controlled errors. A live request successfully retrieved and mapped
+40 posts. The home page still shows the application foundation; the search UI,
+caching, and analysis follow in later phases.
 
 ## Run locally
 
@@ -63,10 +64,12 @@ and pushes manually; the assistant must not commit, push, or create release tags
 
 ## Configuration
 
-The configuration reads optional `MASTODON_INSTANCE` and `MASTODON_ACCESS_TOKEN`
-environment variables. The current home page does not use them. Use a dedicated project account and a user access
+The client reads `MASTODON_INSTANCE` and `MASTODON_ACCESS_TOKEN` when it is
+created. Missing settings produce a controlled error on fetch without preventing
+the home page from starting. Use a dedicated project account and a user access
 token with `read:statuses`. Never commit credentials. See the setup instructions
-for the local configuration procedure.
+for loading `.env` before starting sbt. Restart after changing these values.
+The instance must be an HTTPS origin without an API path, query, or fragment.
 
 ## Project ownership
 

@@ -23,6 +23,7 @@ copies of the complete conversation:
 | 1 | Implement the agreed plan one phase at a time; leave all commits and pushes to the developer. | README, setup instructions, requirements checklist, progress record, Git exclusions, and environment example. |
 | 2 | Move on to Phase 2 after the manual Phase 1 commit and push. | Play skeleton, build configuration, JDK setup, home page, controller and route tests, coverage and Javadoc tasks, and documentation updates. |
 | 3 | Implement the post domain model, JSON mapping, and readable text conversion with tests. | Implementation and test-design assistance for post values, mapping validation, HTML conversion, and related documentation. |
+| 4 | Implement the asynchronous REST client, error handling, mocked tests, and a separate live connection check. | Implementation and test-design assistance for requests, configuration, safe errors, dependency injection, and documentation; a live smoke check without displaying credentials. |
 
 ## Ongoing disclosure
 

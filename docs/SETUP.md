@@ -40,7 +40,7 @@ sbt run
 ```
 
 Visit <http://localhost:9000> to view the home page. Ctrl+C stops the server.
-No Mastodon credentials are required for the skeleton. The initial dependency
+No Mastodon credentials are required for the home page. The initial dependency
 download requires internet access; sbt resolves the pinned libraries automatically.
 
 Run the complete build checks separately from the development server:
@@ -85,8 +85,8 @@ when making the first push.
 
 Menu names can differ between instances. Mastodon's
 [client access documentation](https://docs.joinmastodon.org/client/token/)
-describes application registration and token types. Account creation and the live
-connection check are still pending; they are not implied by these instructions.
+describes application registration and token types. During Phase 4, the configured
+client successfully retrieved 40 hashtag posts in a separate live smoke check.
 
 ## Local configuration
 
@@ -121,8 +121,14 @@ This shell command executes the file: source only the `.env` you created and
 reviewed. sbt does not load `.env` automatically. `.gitignore` excludes this local
 configuration file.
 
-After the client is implemented, manually verify a hashtag request using the
-running app. Automated tests will use mocks and must not contact Mastodon.
+The client captures settings when it is created: restart the application after
+changing `.env`, loading the file in the terminal that starts sbt. The instance
+must be an HTTPS origin such as `https://mastodon.social`, optionally with a
+trailing slash, and without credentials, an API path, query, or fragment.
+
+The current home page does not initiate requests. Once the search UI is added,
+verify a hashtag search through the running app. Automated tests use mocks and
+must not contact Mastodon.
 
 ## Before submission
 
