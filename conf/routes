@@ -1,0 +1,5 @@
+# The single application controller serves the home page.
+GET     /                       controllers.ApplicationController.index()
+
+# Play's built-in asset controller serves static resources.
+GET     /assets/*file            controllers.Assets.versioned(path="/public", file: Asset)

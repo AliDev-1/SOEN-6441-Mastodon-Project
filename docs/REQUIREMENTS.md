@@ -45,7 +45,7 @@ the results overview. Both scores will appear there and on the details page.
 - [ ] Mock the API with Mockito or a factory-generated mock; no live API unit tests (5.6).
 - [ ] Document equivalence partitions and assert exact results (5.6).
 - [ ] Achieve 100% branch coverage of handwritten production code with JaCoCo (5.6).
-- [ ] Verify `sbt run`, `sbt test`, `sbt jacoco`, `sbt javadoc`, and `sbt clean` (5.3).
+- [x] Verify `sbt run`, `sbt test`, `sbt jacoco`, `sbt javadoc`, and `sbt clean` (5.3); verified for the Phase 2 skeleton and to be rechecked for final submission.
 - [ ] Javadoc every class, constructor, and method, including private methods and tests (5.4).
 - [ ] Include `@author` on all classes and methods (5.4).
 - [ ] Disclose GenAI assistance in affected class documentation and retain prompt provenance (5.4).

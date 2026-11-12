@@ -7,7 +7,9 @@ actually used as implementation progresses.
 
 OpenAI Codex assisted with interpreting the assignment, planning the implementation,
 and drafting the Phase 1 repository documentation and configuration examples.
-No Java application code has been generated at this checkpoint.
+Phase 2 assistance covered implementing the initial Play build, asynchronous home
+controller, template, stylesheet, and tests. Later contributions will be recorded
+as they occur.
 
 ## Prompt record
 
@@ -19,6 +21,7 @@ copies of the complete conversation:
 | Planning | Examine the project instructions and lecture material; plan a concise, student-readable Java implementation with tests, comments, documentation, and incremental Git history. | Requirements review, architecture, tests, and implementation checkpoints. |
 | Scope | Implement the group component, readability, and word statistics. | Selected feature scope and ordering. |
 | 1 | Implement the agreed plan one phase at a time; leave all commits and pushes to the developer. | README, setup instructions, requirements checklist, progress record, Git exclusions, and environment example. |
+| 2 | Move on to Phase 2 after the manual Phase 1 commit and push. | Play skeleton, build configuration, JDK setup, home page, controller and route tests, coverage and Javadoc tasks, and documentation updates. |
 
 ## Ongoing disclosure
 

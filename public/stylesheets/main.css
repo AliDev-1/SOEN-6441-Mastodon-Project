@@ -1,0 +1,24 @@
+/* Provide a readable layout that also fits narrow browser windows. */
+body {
+    margin: 0;
+    background: #f4f6f8;
+    color: #202b38;
+    font-family: system-ui, sans-serif;
+    line-height: 1.6;
+}
+
+main {
+    max-width: 48rem;
+    margin: 4rem auto;
+    padding: 2rem;
+}
+
+/* Separate the course label from the page's main heading and description. */
+.eyebrow {
+    color: #465a70;
+    font-size: 0.9rem;
+}
+
+h1 {
+    line-height: 1.2;
+}

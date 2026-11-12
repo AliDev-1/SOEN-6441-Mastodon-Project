@@ -1,7 +1,6 @@
 # Development setup
 
-These instructions prepare the environment for MAWA. The Play build will be added
-in Phase 2; the commands for running the application will be verified then.
+These instructions prepare the environment and run the MAWA Play skeleton.
 
 ## Java and sbt
 
@@ -10,7 +9,16 @@ Use JDK 21 and sbt. Play lists Java 21 among its supported LTS versions in its
 Install JDK 21 from [Eclipse Temurin](https://adoptium.net/temurin/releases/?version=21)
 if necessary. Install sbt using its [official instructions](https://www.scala-sbt.org/download/).
 
-On macOS, select the installed JDK 21 for the current terminal:
+JDK 21 was installed through Homebrew during Phase 2. On this Apple Silicon Mac,
+select it for the current terminal without changing the system-wide Java default:
+
+```sh
+export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+export PATH="$JAVA_HOME/bin:$PATH"
+java -version
+```
+
+For a JDK installed and registered through the standard macOS installer, use:
 
 ```sh
 export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
@@ -19,9 +27,31 @@ java -version
 command -v sbt
 ```
 
-Do not run the selection command until JDK 21 is installed. The initial environment
-inspection found JDK 25 and sbt, but no JDK 21. Phase 2 will pin and verify the Play,
-sbt, and library versions together.
+Do not run the selection command until JDK 21 is installed. The build pins Play
+3.0.12, sbt 1.13.0, Scala 2.13.18 (for Play templates), sbt-jacoco 3.7.0, JUnit
+4.13.2, Mockito 5.24.0, and jsoup 1.21.2. Application logic is written in Java.
+
+## Run and verify
+
+From the repository root with JDK 21 selected:
+
+```sh
+sbt run
+```
+
+Visit <http://localhost:9000> to view the home page. Ctrl+C stops the server.
+No Mastodon credentials are required for the skeleton. The initial dependency
+download requires internet access; sbt resolves the pinned libraries automatically.
+
+Run the complete build checks separately from the development server:
+
+```sh
+sbt clean test jacoco javadoc
+```
+
+Coverage is generated under `target/scala-2.13/jacoco/report/`; Javadoc is generated
+under `target/site/javadoc/`. These build outputs are ignored by Git. Final
+submission documentation will be copied to its delivery location in Phase 11.
 
 ## Git identity and review
 
